@@ -58,8 +58,8 @@ export default function World() {
           <EffectComposer multisampling={0}>
             <N8AO halfRes aoRadius={2.2} intensity={2.2} distanceFalloff={0.8} quality="performance" />
             <Bloom mipmapBlur luminanceThreshold={0.95} luminanceSmoothing={0.2} intensity={1.1} radius={0.75} />
-            <HueSaturation saturation={0.14} />
-            <BrightnessContrast contrast={0.1} />
+            <HueSaturation saturation={0.02} />
+            <BrightnessContrast brightness={0.01} contrast={0.06} />
             <Vignette eskil={false} offset={0.22} darkness={0.62} />
             <SMAA />
           </EffectComposer>
@@ -71,7 +71,7 @@ export default function World() {
 
 // ───────────────────────── sky & light ─────────────────────────
 
-const C_DAY = new THREE.Color('#a8c3da');
+const C_DAY = new THREE.Color('#c9c4b4');
 const C_DUSK = new THREE.Color('#d98a5c');
 const C_NIGHT = new THREE.Color('#0a0f1e');
 const SUN_DAY = new THREE.Color('#fff1d6');
@@ -136,7 +136,7 @@ function DayNight({ low }: { low: boolean }) {
   return (
     <>
       <Sky ref={sky} distance={800} sunPosition={[1, 0.5, -0.35]} mieCoefficient={0.004} mieDirectionalG={0.86} rayleigh={1.2} turbidity={6} />
-      <hemisphereLight ref={hemi} args={['#e8f1ff', '#4a3e2c', 0.6]} />
+      <hemisphereLight ref={hemi} args={['#fff3dc', '#4a3e2c', 0.6]} />
       <directionalLight
         ref={sun}
         castShadow
@@ -264,12 +264,12 @@ function Hotspot({ loc, children, labelY = 7, sub }: { loc: LocId; children: Rea
           onClick={() => visit(loc)}
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
-          className={`hud-text flex items-center gap-1.5 whitespace-nowrap text-left transition ${hover ? 'scale-110' : 'opacity-90'}`}
+          className={`lux-pill flex items-center gap-1.5 whitespace-nowrap py-0.5 pl-1 pr-3 text-left transition ${hover ? 'scale-110 !border-gold' : ''}`}
         >
-          <span className={`grid h-7 w-7 place-items-center rounded-full border text-[14px] shadow-lg ${hover ? 'border-gold bg-black/85' : 'border-white/40 bg-black/60'}`}>{L.icon}</span>
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-gold/15 text-[12px]">{L.icon}</span>
           <span>
-            <span className="block font-hud text-[14px] uppercase leading-none tracking-wide text-white">{L.label}</span>
-            <span className={`block text-[10px] font-semibold leading-tight text-gold-light transition-opacity ${hover ? 'opacity-100' : 'opacity-0'}`}>{sub ?? L.hint}</span>
+            <span className="block font-serif text-[13px] font-bold leading-tight text-cream">{L.label}</span>
+            {hover && <span className="block text-[10px] leading-tight text-gold-light">{sub ?? L.hint}</span>}
           </span>
         </button>
       </Html>
@@ -362,9 +362,9 @@ function VenturesRow({ owned, counts }: { owned: Set<string>; counts: Record<str
             <Html position={[0, has ? (p.itemId === 'holding' ? 30 : p.itemId === 'foodcart' || p.itemId === 'reseller' ? 5 + (i % 2) * 2 : 8.5 + (i % 2) * 2) : 3.2 + (i % 2) * 2.4, 0]} center zIndexRange={[10, 0]}>
               <button
                 onClick={() => (has ? openTab('Portfolio') : visit('ventures'))}
-                className={`hud-text whitespace-nowrap text-[11px] font-bold uppercase tracking-wide ${has ? 'text-gold-light' : 'text-white/80'}`}
+                className={`lux-pill whitespace-nowrap px-2.5 py-0.5 text-[11px] font-semibold ${has ? 'text-gold-light' : 'text-cream-dim'}`}
               >
-                {has ? `${it.name}${counts[p.itemId] > 1 ? ` ×${counts[p.itemId]}` : ''}` : <>{it.name} <span className="text-[#7ee07e]">{money(it.price, true)}</span></>}
+                {has ? `${it.name}${counts[p.itemId] > 1 ? ` ×${counts[p.itemId]}` : ''}` : <>{it.name} · <span className="text-gold-light">{money(it.price, true)}</span></>}
               </button>
             </Html>
           </group>

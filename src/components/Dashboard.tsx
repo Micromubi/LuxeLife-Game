@@ -56,12 +56,12 @@ export default function Dashboard() {
       {shimmer ? <div key={shimmer} className="shimmer-overlay" /> : null}
 
       {/* top left: clock & controls */}
-      <header className="absolute left-3 top-3 z-30 flex flex-wrap items-center gap-2 rounded-2xl border border-white/[0.08] bg-black/55 px-3 py-2 backdrop-blur">
+      <header className="lux-card absolute left-3 top-3 z-30 flex flex-wrap items-center gap-2 px-3 py-2">
         <h1 className="font-serif text-lg font-extrabold leading-none"><span className={`gold-text ${vip ? 'vip-crest' : ''}`}>Luxe Life</span></h1>
         {vip && <span className="rounded-full border border-gold/60 px-1.5 py-0.5 text-[9px] font-bold tracking-[0.2em] text-gold">VIP</span>}
         <span className="h-5 w-px bg-white/15" />
         <div>
-          <div className="num font-hud text-[17px] leading-none tracking-wide">DAY {E.day(game)} · {E.clock(game)}</div>
+          <div className="num font-serif text-[16px] font-bold leading-none">Day {E.day(game)} · {E.clock(game)}</div>
           <div className="mt-1 h-0.5 w-full overflow-hidden rounded-full bg-white/10">
             <div className="h-full bg-gold transition-[width] duration-200" style={{ width: `${settings.paused ? 0 : progress * 100}%` }} />
           </div>
@@ -79,15 +79,15 @@ export default function Dashboard() {
         <SettingsMenu />
       </header>
       {game.dayEvent && (
-        <div className="hud-text pointer-events-none absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-gold-light lg:block">
-          Today: {game.dayEvent}
+        <div className="lux-pill pointer-events-none absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 px-4 py-1 text-center font-serif text-xs italic text-gold-light lg:block">
+          Today · {game.dayEvent}
         </div>
       )}
       <MoneyHud />
 
       {/* left: stats */}
       {statsOpen && (
-        <div className="absolute left-3 top-[70px] z-20 max-h-[calc(100%-70px-290px)] w-[300px] overflow-y-auto pr-1 [&_.panel]:!bg-[#1a1918]/85 [&_.panel]:backdrop-blur">
+        <div className="absolute left-3 top-[70px] z-20 max-h-[calc(100%-70px-330px)] w-[300px] overflow-y-auto pr-1 [&_.panel]:!bg-[#1a1918]/85 [&_.panel]:backdrop-blur">
           <StatusColumn />
         </div>
       )}
@@ -130,8 +130,8 @@ export default function Dashboard() {
 
       {/* bottom dock */}
       {!drawer.open && (
-        <div className="absolute bottom-4 left-[150px] right-3 z-20 flex flex-col items-center gap-2 sm:left-[210px]">
-          <p className="hud-text hidden text-xs text-white/80 sm:block">Click a building or a radar icon to go there · drag to orbit · scroll to zoom</p>
+        <div className="absolute bottom-4 left-[150px] right-3 z-20 flex flex-col items-center gap-2 sm:left-[230px]">
+          <p className="lux-shadow hidden font-serif text-xs italic text-cream-dim sm:block">Click a building or the map to go there · drag to look around · scroll to zoom</p>
           <div className="flex gap-1.5 overflow-x-auto rounded-2xl border border-white/[0.08] bg-black/65 p-1.5 backdrop-blur">
             {TABS.map((t) => (
               <button key={t} onClick={() => openTab(t)} className="btn-ghost whitespace-nowrap border-transparent px-3 py-2 text-xs">{t}</button>

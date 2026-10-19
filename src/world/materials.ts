@@ -181,7 +181,7 @@ export function waterNormals(repeat: [number, number]) {
 
 /** A sign painted onto a canvas (big letters on hills, shop fronts). */
 export function textTex(text: string, opts: { w?: number; h?: number; color?: string; bg?: string; font?: string } = {}) {
-  const { w = 1024, h = 160, color = '#ffffff', bg = 'transparent', font = 'bold 120px Impact, Anton, sans-serif' } = opts;
+  const { w = 1024, h = 160, color = '#ffffff', bg = 'transparent', font = "bold 120px 'Playfair Display', Georgia, serif" } = opts;
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
   const x = c.getContext('2d')!;
@@ -247,7 +247,7 @@ export const M = {
   lot: new THREE.MeshStandardMaterial({ color: '#5b5346', roughness: 1 }),
   sign: new THREE.MeshStandardMaterial({ color: '#f5f1e8', roughness: 0.6 }),
   paint: new THREE.MeshStandardMaterial({ color: '#f2f2ee', roughness: 0.7 }),
-  yellowPaint: new THREE.MeshStandardMaterial({ color: '#e5b93a', roughness: 0.7 }),
+  yellowPaint: new THREE.MeshStandardMaterial({ color: '#c9a24a', metalness: 0.4, roughness: 0.45 }),
   tyre: new THREE.MeshStandardMaterial({ color: '#121212', roughness: 0.9 }),
   rim: new THREE.MeshStandardMaterial({ color: '#c9ccd1', metalness: 1, roughness: 0.25 }),
   tint: new THREE.MeshStandardMaterial({ color: '#0b0f14', metalness: 0.9, roughness: 0.05 }),

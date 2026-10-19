@@ -149,9 +149,9 @@ export default function Avatar() {
         <ringGeometry args={[0.6, 0.72, 32]} />
       </mesh>
       <Html position={[0, 2.9, 0]} center zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
-        <div className="hud-text whitespace-nowrap text-center leading-tight">
-          <div className="font-hud text-[15px] tracking-wide text-white">{g.name}</div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gold-light">{activity}</div>
+        <div className="lux-pill whitespace-nowrap px-3 py-0.5 text-center leading-tight">
+          <span className="font-serif text-[13px] font-bold text-cream">{g.name}</span>
+          <span className="ml-1.5 text-[10px] text-gold-light">· {activity}</span>
         </div>
       </Html>
     </group>

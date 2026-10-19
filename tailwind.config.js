@@ -15,7 +15,6 @@ export default {
       fontFamily: {
         serif: ['"Playfair Display"', 'Georgia', 'serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        hud: ['Anton', 'Impact', 'Haettenschweiler', '"Arial Narrow Bold"', 'sans-serif'],
       },
       keyframes: {
         shimmer: { '0%': { backgroundPosition: '-200% 0' }, '100%': { backgroundPosition: '200% 0' } },

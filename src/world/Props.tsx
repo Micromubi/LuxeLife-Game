@@ -250,7 +250,7 @@ const CAR_STYLE: Record<string, CarStyle> = {
   suv: { body: '#151515', len: 2.6, h: 0.72, w: 1.18, cabin: 0.55, cabLen: 0.62, cabZ: -0.12, metal: 0.6 },
   sportscar: { body: '#b3121b', len: 2.5, h: 0.38, w: 1.14, cabin: 0.3, cabLen: 0.36, cabZ: -0.12 },
   hypercar: { body: '#D4AF37', len: 2.7, h: 0.34, w: 1.18, cabin: 0.27, cabLen: 0.32, cabZ: -0.05, metal: 0.95 },
-  taxi: { body: '#f2c230', len: 2.4, h: 0.5, w: 1.08, cabin: 0.42, cabLen: 0.5, cabZ: -0.05, taxi: true },
+  taxi: { body: '#121212', len: 2.5, h: 0.52, w: 1.1, cabin: 0.44, cabLen: 0.52, cabZ: -0.05, metal: 0.7, taxi: true },
   van: { body: '#e8e8e4', len: 2.8, h: 1.05, w: 1.15, cabin: 0.3, cabLen: 0.2, cabZ: 0.95 },
 };
 
@@ -265,7 +265,7 @@ function bodyMat(color: string, metal = 0.5) {
   return m;
 }
 
-const taxiSign = new THREE.MeshStandardMaterial({ map: textTex('TAXI', { w: 256, h: 96, color: '#111', bg: '#ffe066', font: 'bold 70px Impact, Anton, sans-serif' }) });
+const taxiSign = glow(new THREE.MeshStandardMaterial({ map: textTex('LUXE', { w: 256, h: 96, color: '#E8CF77', bg: '#111111', font: "bold 62px 'Playfair Display', Georgia, serif" }), emissive: '#E8CF77', emissiveIntensity: 0.3 }), 0.3, 2);
 
 /** A car facing +z. Scaled up a touch so it matches the people. */
 export function Car({ kind, position, rotation = 0, color }: { kind: string; position: V3; rotation?: number; color?: string }) {
@@ -469,8 +469,11 @@ export function Skyline() {
     const r = seeded(55);
     return Array.from({ length: 18 }, (_, i) => ({ x: -300 + i * 38 + r() * 14, z: -290 - r() * 40, r: 40 + r() * 35, h: 30 + r() * 40 }));
   }, []);
-  const sign = useMemo(() => new THREE.MeshStandardMaterial({ map: textTex('LUXE HILLS', { font: 'bold 130px Impact, Anton, sans-serif' }), transparent: true, emissive: '#ffffff', emissiveIntensity: 0.15 }), []);
-  useMemo(() => glow(sign, 0.15, 0.9), [sign]);
+  // The Luxe crest on the hills: a serif monogram inside a gold ring, lit at night.
+  const crest = useMemo(() => {
+    const map = textTex('L', { w: 256, h: 256, color: '#F6E7B0', font: "bold 200px 'Playfair Display', Georgia, serif" });
+    return glow(new THREE.MeshStandardMaterial({ map, transparent: true, emissive: '#E8CF77', emissiveMap: map, emissiveIntensity: 0.2 }), 0.2, 1.6);
+  }, []);
 
   return (
     <group>
@@ -488,7 +491,10 @@ export function Skyline() {
           <coneGeometry args={[h.r, h.h, 7]} />
         </mesh>
       ))}
-      <mesh position={[-50, 34, -262]} rotation={[-0.2, 0.12, 0]} material={sign}><planeGeometry args={[80, 12.5]} /></mesh>
+      <group position={[-30, 40, -262]} rotation={[-0.15, 0.1, 0]}>
+        <mesh material={M.goldGlow}><torusGeometry args={[13, 1.1, 10, 48]} /></mesh>
+        <mesh position={[0, 0, 0.3]} material={crest}><planeGeometry args={[22, 22]} /></mesh>
+      </group>
     </group>
   );
 }

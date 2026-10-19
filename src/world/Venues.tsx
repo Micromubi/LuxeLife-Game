@@ -36,7 +36,7 @@ function signMat(text: string, color: string, bg: string, font: string) {
   return m;
 }
 
-export function Sign({ text, position, w, rotation, color = '#ffffff', bg = 'transparent', font = 'bold Impact, Anton, sans-serif' }: {
+export function Sign({ text, position, w, rotation, color = '#ffffff', bg = 'transparent', font = "bold 'Playfair Display', Georgia, serif" }: {
   text: string; position: V3; w: number; rotation?: V3; color?: string; bg?: string; font?: string;
 }) {
   return (
