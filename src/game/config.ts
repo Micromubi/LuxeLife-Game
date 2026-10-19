@@ -133,7 +133,8 @@ export const CATEGORY_LABEL: Record<string, string> = {
   BUSINESS: 'Ventures',
 };
 
-export type ActionGroup = 'Work' | 'Dine' | 'Rest' | 'Care' | 'Society';
+export type ActionGroup = 'Work' | 'Study' | 'Dine' | 'Rest' | 'Care' | 'Fitness' | 'Health' | 'Society' | 'Leisure' | 'Events' | 'Gamble' | 'Travel';
+export const ACTION_GROUPS: ActionGroup[] = ['Work', 'Study', 'Dine', 'Rest', 'Care', 'Fitness', 'Health', 'Society', 'Leisure', 'Events', 'Gamble', 'Travel'];
 export interface ActionDef {
   id: string;
   label: string;
@@ -152,6 +153,14 @@ export interface ActionDef {
   /** Can't start if a need is above this ("you're not hungry"). */
   maxNeed?: Partial<Needs>;
   special?: 'work' | 'overtime' | 'manage' | 'sleep' | 'poker' | 'relax';
+  /** Health restored (or lost) by the end of the activity. */
+  health?: number;
+  /** Games of chance: probability of winning and the multiple of the stake paid back. */
+  gamble?: { odds: number; payout: number };
+  /** Study: counts as this many shifts toward your next promotion. */
+  study?: number;
+  /** Trips: owning the Private Jet cuts the cost by this fraction. */
+  jetDiscount?: number;
   desc: string;
 }
 
@@ -178,6 +187,31 @@ export const ACTIONS: ActionDef[] = [
   { id: 'club', label: 'VIP Club Table', group: 'Society', hours: 4, cost: 2_500, effects: { social: 45, hygiene: -10 }, rep: 18, tokens: 1, minPrestige: 100, open: [21, 3], desc: '4h. +1 networking token.' },
   { id: 'gala', label: 'Charity Gala', group: 'Society', hours: 4, cost: 25_000, effects: { social: 40 }, rep: 70, tokens: 2, minPrestige: 300, open: [19, 23], desc: '4h. +2 networking tokens, big reputation.' },
   { id: 'poker', label: 'Billionaires\' Poker', group: 'Society', hours: 5, cost: 50_000, effects: { social: 25 }, rep: 10, special: 'poker', minPrestige: 400, open: [20, 3], desc: '5h. $50k buy-in. Needs a Gold Chronograph.' },
+
+  { id: 'course', label: 'Evening Class', group: 'Study', hours: 3, cost: 350, effects: { energy: -6, social: 6 }, study: 1, minEnergy: 20, open: [17, 22], desc: '3h. Counts as 1 shift toward your next promotion.' },
+  { id: 'mba', label: 'Executive MBA Module', group: 'Study', hours: 6, cost: 4_000, effects: { energy: -12, social: 12 }, study: 3, rep: 4, minEnergy: 35, minPrestige: 60, open: [9, 13], desc: '6h. Counts as 3 shifts. Great people in the room.' },
+
+  { id: 'workout', label: 'Gym Workout', group: 'Fitness', hours: 2, cost: 20, effects: { energy: -10, hygiene: -25, social: 4 }, health: 6, minEnergy: 25, open: [5, 23], desc: '2h. Builds health. You\'ll need a shower.' },
+  { id: 'yoga', label: 'Yoga & Stretch', group: 'Fitness', hours: 1, cost: 30, effects: { energy: 4, hygiene: -8 }, health: 3, open: [6, 21], desc: '1h. Calm body, clear head.' },
+  { id: 'trainer', label: 'Personal Trainer', group: 'Fitness', hours: 2, cost: 250, effects: { energy: -12, hygiene: -25, social: 8 }, health: 12, rep: 1, minEnergy: 30, minPrestige: 30, open: [6, 21], desc: '2h. Serious results.' },
+
+  { id: 'checkup', label: 'Doctor Check-up', group: 'Health', hours: 1, cost: 150, effects: {}, health: 15, open: [8, 18], desc: '1h. Catch problems early.' },
+  { id: 'treatment', label: 'Overnight Treatment', group: 'Health', hours: 8, cost: 1_800, effects: { hunger: 20, hygiene: 30 }, health: 50, sleeping: true, desc: '8h ward stay. Big health boost; you sleep through it.' },
+
+  { id: 'beach', label: 'Beach Day', group: 'Leisure', hours: 3, cost: 0, effects: { social: 12, hygiene: -10 }, open: [8, 18], special: 'relax', desc: '3h. Sun, sea, people-watching. Free.' },
+  { id: 'cabana', label: 'Beach Club Cabana', group: 'Leisure', hours: 3, cost: 350, effects: { social: 30, hunger: 20 }, rep: 3, open: [11, 20], desc: '3h. Bottle service by the waves.' },
+  { id: 'yacht', label: 'Yacht Party', group: 'Leisure', hours: 5, cost: 18_000, effects: { social: 55, hunger: 30 }, rep: 30, tokens: 1, minPrestige: 200, open: [12, 22], desc: '5h. +1 networking token. The right people, offshore.' },
+
+  { id: 'match', label: 'Watch the Match', group: 'Events', hours: 3, cost: 90, effects: { social: 28, hunger: 10 }, open: [16, 22], desc: '3h. Hot dogs and a roaring crowd.' },
+  { id: 'concert', label: 'Stadium Concert', group: 'Events', hours: 4, cost: 400, effects: { social: 40, hygiene: -12, energy: -8 }, rep: 3, open: [19, 23], desc: '4h. Front-row energy.' },
+  { id: 'vipbox', label: 'VIP Box', group: 'Events', hours: 3, cost: 9_000, effects: { social: 40, hunger: 25 }, rep: 25, tokens: 1, minPrestige: 180, open: [16, 22], desc: '3h. +1 networking token. Deals over canapés.' },
+
+  { id: 'slots', label: 'Slot Machines', group: 'Gamble', hours: 1, cost: 100, effects: { social: 5 }, gamble: { odds: 0.4, payout: 2.3 }, desc: '1h. $100 stake. 40% chance to win $230.' },
+  { id: 'blackjack', label: 'Blackjack Table', group: 'Gamble', hours: 2, cost: 2_000, effects: { social: 12 }, gamble: { odds: 0.47, payout: 2 }, minPrestige: 30, open: [18, 6], desc: '2h. $2,000 stake. 47% to double it.' },
+  { id: 'highroller', label: 'High Roller Room', group: 'Gamble', hours: 3, cost: 100_000, effects: { social: 20 }, gamble: { odds: 0.46, payout: 2.1 }, rep: 15, minPrestige: 300, open: [20, 6], desc: '3h. $100k stake. 46% to win $210k.' },
+
+  { id: 'getaway', label: 'Weekend Getaway', group: 'Travel', hours: 12, cost: 6_000, effects: { energy: 35, social: 30, hygiene: 20, hunger: 30 }, rep: 10, health: 10, minPrestige: 80, jetDiscount: 0.6, desc: '12h. Fly out, come back new. 60% cheaper with your own jet.' },
+  { id: 'monaco', label: 'Monaco Grand Prix', group: 'Travel', hours: 24, cost: 60_000, effects: { energy: 20, social: 60, hunger: 40, hygiene: 20 }, rep: 70, tokens: 2, minPrestige: 400, jetDiscount: 0.6, desc: '24h. +2 networking tokens. 60% cheaper with your own jet.' },
 ];
 
 /** Financing: deposit share and loan term per category. */

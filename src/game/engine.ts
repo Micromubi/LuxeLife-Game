@@ -454,6 +454,12 @@ export function liquidate(s: GameState, out: Out, reason: string) {
 
 export type Result = { ok: boolean; reason?: string };
 
+/** What an activity costs you right now (trips are cheaper if you own the jet). */
+export function actionCost(s: GameState, a: (typeof ACTIONS)[number]) {
+  if (a.jetDiscount && s.assets.some((x) => x.itemId === 'jet')) return Math.round(a.cost * (1 - a.jetDiscount));
+  return a.cost;
+}
+
 export function canDoAction(s: GameState, id: string): Result {
   const a = ACTIONS.find((x) => x.id === id);
   if (!a) return { ok: false, reason: 'Unknown' };
@@ -463,7 +469,7 @@ export function canDoAction(s: GameState, id: string): Result {
   if (a.minEnergy && s.needs.energy < a.minEnergy) return { ok: false, reason: `Too tired (needs ${a.minEnergy}+ energy)` };
   if (a.maxNeed?.hunger !== undefined && s.needs.hunger > a.maxNeed.hunger) return { ok: false, reason: "You're not hungry" };
   if (a.maxNeed?.energy !== undefined && s.needs.energy > a.maxNeed.energy) return { ok: false, reason: "You're not tired" };
-  if (a.cost > s.cash) return { ok: false, reason: 'Not enough cash' };
+  if (actionCost(s, a) > s.cash) return { ok: false, reason: 'Not enough cash' };
   if (a.special === 'manage' && !s.assets.some((x) => x.category === 'BUSINESS')) return { ok: false, reason: 'You own no ventures' };
   if (a.special === 'poker' && !tags(s).has('poker')) return { ok: false, reason: 'Needs a Gold Chronograph' };
   return { ok: true };
@@ -474,7 +480,8 @@ export function doAction(s: GameState, id: string, out: Out): Result {
   if (!check.ok) return check;
   const a = ACTIONS.find((x) => x.id === id)!;
 
-  if (a.cost) { s.cash -= a.cost; ledger(s, -a.cost, 'EXPENSE', a.label); }
+  const cost = actionCost(s, a);
+  if (cost) { s.cash -= cost; ledger(s, -cost, 'EXPENSE', a.gamble ? `${a.label} stake` : a.label); }
 
   if (a.special === 'work' || a.special === 'overtime') {
     const mods = modifiers(s);
@@ -514,8 +521,23 @@ export function doAction(s: GameState, id: string, out: Out): Result {
   }
   if (a.rep) s.reputation += a.rep;
   if (a.tokens) { s.tokens += a.tokens; out.push({ kind: 'gold', text: `+${a.tokens} networking token${a.tokens > 1 ? 's' : ''}.` }); }
+  if (a.health) {
+    s.health = clamp(s.health + a.health);
+    out.push({ kind: 'good', text: `${a.label}: health ${a.health > 0 ? '+' : ''}${a.health}.` });
+  }
+  if (a.study) {
+    s.shiftsAtLevel += a.study;
+    out.push({ kind: 'good', text: `${a.label} done. Counts as ${a.study} shift${a.study > 1 ? 's' : ''} toward promotion.` });
+    tryPromote(s, out);
+  }
 
-  if (a.special === 'poker') {
+  if (a.gamble) {
+    if (Math.random() < a.gamble.odds) {
+      const pot = Math.round(cost * a.gamble.payout);
+      s.cash += pot; ledger(s, pot, 'INCOME', `${a.label} winnings`);
+      out.push({ kind: 'gold', text: `Winner! ${a.label} paid ${money(pot)}.` });
+    } else out.push({ kind: 'bad', text: `${a.label}: the house wins. You lost ${money(cost)}.` });
+  } else if (a.special === 'poker') {
     const win = Math.random() < 0.46;
     if (win) {
       const pot = a.cost * 2.15;
@@ -523,7 +545,7 @@ export function doAction(s: GameState, id: string, out: Out): Result {
       s.reputation += 20;
       out.push({ kind: 'gold', text: `You took the table. ${money(pot)} and the room's respect.` });
     } else out.push({ kind: 'bad', text: 'You lost the buy-in. They smiled politely.' });
-  } else if (a.cost > 0 || a.rep) out.push({ kind: 'info', text: `${a.label} — done.` });
+  } else if ((cost > 0 || a.rep) && !a.health && !a.study) out.push({ kind: 'info', text: `${a.label} — done.` });
 
   checkBroke(s, out);
   return { ok: true };

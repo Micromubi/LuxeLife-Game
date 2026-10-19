@@ -1,10 +1,10 @@
 import { useGame } from '../game/store';
 import * as E from '../game/engine';
-import { ACTIONS, SLEEP_GAIN, type ActionGroup } from '../game/config';
+import { ACTIONS, ACTION_GROUPS, SLEEP_GAIN, type ActionGroup } from '../game/config';
 import { money } from '../lib/format';
 import type { NeedKey } from '../game/types';
 
-const GROUPS: ActionGroup[] = ['Work', 'Dine', 'Rest', 'Care', 'Society'];
+const GROUPS = ACTION_GROUPS;
 const SHORT: Record<NeedKey, string> = { energy: 'Energy', hunger: 'Fullness', social: 'Social', hygiene: 'Hygiene' };
 
 export default function ActionsPanel({ groups, onShowAll }: { groups?: ActionGroup[]; onShowAll?: () => void }) {
@@ -20,6 +20,7 @@ export default function ActionsPanel({ groups, onShowAll }: { groups?: ActionGro
           <div className="flex flex-col gap-2">
             {ACTIONS.filter((a) => a.group === grp).map((a) => {
               const can = E.canDoAction(g, a.id);
+              const cost = E.actionCost(g, a);
               const fx = Object.entries(a.effects) as [NeedKey, number][];
               if (a.sleeping) {
                 const night = E.inWindow(E.hourOfDay(g), [21, 9]);
@@ -38,8 +39,10 @@ export default function ActionsPanel({ groups, onShowAll }: { groups?: ActionGro
                       <span className="text-xs text-cream-dim">{a.hours}h</span>
                     </div>
                     <div className="mt-0.5 text-xs text-cream-dim">{can.ok ? a.desc : <span className="text-ruby/90">{can.reason}</span>}</div>
-                    {fx.length > 0 && (
+                    {(fx.length > 0 || a.health || a.study) && (
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {a.health ? <span className="rounded-md bg-jade/15 px-1.5 py-0.5 text-[10px] font-semibold text-jade">+{a.health} Health</span> : null}
+                        {a.study ? <span className="rounded-md bg-[#4aa3df]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#8cc8f0]">+{a.study} shift{a.study > 1 ? 's' : ''} to promotion</span> : null}
                         {fx.map(([k, v]) => (
                           <span key={k} className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${v > 0 ? 'bg-jade/15 text-jade' : 'bg-ruby/15 text-[#e58b86]'}`}>
                             {v > 0 ? '+' : ''}{v} {SHORT[k]}
@@ -53,8 +56,9 @@ export default function ActionsPanel({ groups, onShowAll }: { groups?: ActionGro
                   <div className="num shrink-0 text-right text-sm font-semibold">
                     {a.special === 'work' && <span className="text-jade">+{money(wage)}</span>}
                     {a.special === 'overtime' && <span className="text-jade">+{money(wage * 2.2)}</span>}
-                    {a.cost > 0 && <span className="text-cream">{money(a.cost)}</span>}
-                    {a.cost === 0 && !a.special?.match(/work|overtime/) && <span className="text-cream-dim">Free</span>}
+                    {cost > 0 && <span className="text-cream">{money(cost)}</span>}
+                    {cost < a.cost && <div className="text-[10px] text-cream-dim line-through">{money(a.cost)}</div>}
+                    {cost === 0 && !a.special?.match(/work|overtime/) && <span className="text-cream-dim">Free</span>}
                   </div>
                 </button>
               );

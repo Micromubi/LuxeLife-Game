@@ -4,13 +4,15 @@ import { MeshReflectorMaterial, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 import { M, asphaltTex, glow, pavingTex, textTex, towerMat, waterNormals, world } from './materials';
 import { Box, Cyl, Palm, Tree, Villa } from './Buildings';
-import { ISLAND_POS } from './layout';
+import { BOUNDS, ISLAND_POS, ROADS_X, ROADS_Z, ROAD_Z_SPAN, RUNWAY_Z } from './layout';
 
 type V3 = [number, number, number];
 
-const ROAD_Z = [-21, -7, 7, 21];
-const ROAD_X = [-21, -7, 7, 21];
-const X0 = -32, X1 = 24, Z0 = -26, Z1 = 40;
+const ROAD_Z = ROADS_Z;
+const ROAD_X = ROADS_X;
+const { x0: X0, x1: X1, z0: Z0, z1: Z1 } = BOUNDS;
+/** Vertical streets run from the north road to the south road. */
+const VZ0 = ROAD_Z_SPAN[0] - 1.5, VZ1 = ROAD_Z_SPAN[1] + 1.5;
 /** Road width; two lanes, cars drive on the right at ±LANE from the centre line. */
 const RW = 3;
 const LANE = 0.75;
@@ -67,9 +69,9 @@ function useRoadPaint() {
         yellow.push([mid, z - 0.07, inner, 0.06], [mid, z + 0.07, inner, 0.06]);
       }
     for (const x of ROAD_X)
-      for (const [a, b] of spans([Z0, 21 + RW / 2], ROAD_Z)) {
+      for (const [a, b] of spans([VZ0, VZ1], ROAD_Z)) {
         const mid = (a + b) / 2, len = b - a;
-        const inner = len - (a === Z0 ? 1.2 : 2.4);
+        const inner = len - 2.4;
         if (len < 0.3) continue;
         white.push([x - RW / 2 + 0.12, mid, 0.07, len], [x + RW / 2 - 0.12, mid, 0.07, len]);
         if (inner > 0) yellow.push([x - 0.07, mid, 0.06, inner], [x + 0.07, mid, 0.06, inner]);
@@ -80,8 +82,8 @@ function useRoadPaint() {
         const off = RW / 2 + 0.6;
         for (let k = 0; k < 6; k++) {
           const s = -RW / 2 + 0.3 + k * 0.48;
-          if (z > -26) zebra.push([x + s, z - off, 0.26, 0.9]);
-          if (z < 21) zebra.push([x + s, z + off, 0.26, 0.9]);
+          if (z > ROAD_Z_SPAN[0]) zebra.push([x + s, z - off, 0.26, 0.9]);
+          if (z < ROAD_Z_SPAN[1]) zebra.push([x + s, z + off, 0.26, 0.9]);
           zebra.push([x - off, z + s, 0.9, 0.26], [x + off, z + s, 0.9, 0.26]);
         }
       }
@@ -93,10 +95,10 @@ export function Ground({ reflect }: { reflect: boolean }) {
   const paint = useRoadPaint();
   const mats = useMemo(() => {
     const roadH = new THREE.MeshStandardMaterial({ map: asphaltTex([(X1 - X0) / 3, 1]), roughness: 0.85, metalness: 0.05 });
-    const vt = asphaltTex([1, (21 - Z0) / 3]);
+    const vt = asphaltTex([1, (VZ1 - VZ0) / 3]);
     vt.center.set(0.5, 0.5);
     vt.rotation = Math.PI / 2;
-    vt.repeat.set((21 - Z0) / 3, 1);
+    vt.repeat.set((VZ1 - VZ0) / 3, 1);
     const roadV = new THREE.MeshStandardMaterial({ map: vt, roughness: 0.85, metalness: 0.05 });
     const paving = new THREE.MeshStandardMaterial({ map: pavingTex([(X1 - X0) / 4, (Z1 - Z0) / 4]), roughness: 0.8 });
     return { roadH, roadV, paving };
@@ -115,7 +117,7 @@ export function Ground({ reflect }: { reflect: boolean }) {
       <Box size={[X1 - X0 + 0.6, 0.3, Z1 - Z0 + 0.6]} position={[(X0 + X1) / 2, -0.45, (Z0 + Z1) / 2]} material={M.gold} cast={false} />
       {/* roads */}
       {ROAD_Z.map((z) => <Box key={'z' + z} size={[X1 - X0, 0.02, RW]} position={[(X0 + X1) / 2, 0.01, z]} material={mats.roadH} cast={false} />)}
-      {ROAD_X.map((x) => <Box key={'x' + x} size={[RW, 0.021, 21 + RW / 2 - Z0]} position={[x, 0.012, (Z0 + 21 + RW / 2) / 2]} material={mats.roadV} cast={false} />)}
+      {ROAD_X.map((x) => <Box key={'x' + x} size={[RW, 0.021, VZ1 - VZ0]} position={[x, 0.012, (VZ0 + VZ1) / 2]} material={mats.roadV} cast={false} />)}
       <Marks items={paint.white} material={M.paint} />
       <Marks items={paint.yellow} material={M.yellowPaint} />
       <Marks items={paint.zebra} material={M.paint} y={0.032} />
@@ -159,7 +161,7 @@ function Sea({ reflect }: { reflect: boolean }) {
 function Beach() {
   const items = useMemo(() => {
     const r = seeded(21);
-    return Array.from({ length: 9 }, (_, i) => ({ x: X0 + 4 + i * 6 + r() * 2, z: 43 + r() * 2.5, c: ['#e94f37', '#2f7de1', '#f5c542', '#f4f1ea'][i % 4] }));
+    return Array.from({ length: Math.floor((X1 - X0 - 6) / 6) }, (_, i) => ({ x: X0 + 4 + i * 6 + r() * 2, z: 43 + r() * 2.5, c: ['#e94f37', '#2f7de1', '#f5c542', '#f4f1ea'][i % 4] }));
   }, []);
   const umbrellas = useMemo(() => items.map((it) => new THREE.MeshStandardMaterial({ color: it.c, roughness: 0.8, side: THREE.DoubleSide })), [items]);
   return (
@@ -167,7 +169,7 @@ function Beach() {
       <mesh rotation={[-Math.PI / 2 + 0.07, 0, 0]} position={[(X0 + X1) / 2, -0.32, Z1 + 5]} material={M.sand} receiveShadow>
         <planeGeometry args={[X1 - X0 + 10, 11]} />
       </mesh>
-      {Array.from({ length: 14 }, (_, i) => X0 + 2 + i * 4).map((x, i) => (
+      {Array.from({ length: Math.floor((X1 - X0) / 4) }, (_, i) => X0 + 2 + i * 4).map((x, i) => (
         <Palm key={x} position={[x, 0, Z1 - 1.6]} s={1.05 + (i % 3) * 0.12} lean={0.12 * ((i % 3) - 1)} />
       ))}
       {items.map((it, i) => (
@@ -204,7 +206,7 @@ function kerbPoints(offset: number, step: number, phase: number) {
     for (const [a, b] of spans([X0, X1], ROAD_X))
       for (let x = a + phase; x < b - 0.8; x += step) out.push([x, z + offset, 0]);
   for (const x of ROAD_X)
-    for (const [a, b] of spans([Z0, 21], ROAD_Z))
+    for (const [a, b] of spans([VZ0 - 1.5, VZ1 + 1.5], ROAD_Z))
       for (let z = a + phase; z < b - 0.8; z += step) out.push([x + offset, z, 1]);
   return out;
 }
@@ -231,7 +233,7 @@ export function StreetLamps() {
 
 export function Greenery() {
   const palms = useMemo(() => kerbPoints(RW / 2 + 0.45, 7, 5.6).filter(([, , v]) => v === 1), []);
-  const trees: V3[] = [[-27, 0, -14], [-27, 0, 0], [-27, 0, 14], [-27, 0, -4], [-8.8, 0, 4.5], [19.5, 0, 14]];
+  const trees: V3[] = [[-8.8, 0, 4.5], [19.5, 0, 14], [-39.5, 0, -14], [-39.5, 0, 0], [-39.5, 0, 14], [-39.5, 0, -28], [53.5, 0, -14], [53.5, 0, 14]];
   return (
     <group>
       {trees.map((p, i) => <Tree key={i} position={p} s={1 + (i % 3) * 0.15} />)}
@@ -295,11 +297,14 @@ export function Car({ kind, position, rotation = 0, color }: { kind: string; pos
 
 /** Closed loops along the road grid (corners at road centres). */
 const LOOPS: { pts: [number, number][]; cars: number; ccw?: boolean }[] = [
-  { pts: [[-21, -21], [21, -21], [21, 21], [-21, 21]], cars: 6 },
-  { pts: [[-21, -21], [21, -21], [21, 21], [-21, 21]], cars: 5, ccw: true },
-  { pts: [[-7, -7], [7, -7], [7, 7], [-7, 7]], cars: 3 },
-  { pts: [[-21, -7], [7, -7], [7, 21], [-21, 21]], cars: 3, ccw: true },
-  { pts: [[-7, -21], [21, -21], [21, 7], [-7, 7]], cars: 3, ccw: true },
+  { pts: [[-35, -35], [49, -35], [49, 21], [-35, 21]], cars: 8 },
+  { pts: [[-35, -35], [49, -35], [49, 21], [-35, 21]], cars: 7, ccw: true },
+  { pts: [[-21, -21], [21, -21], [21, 21], [-21, 21]], cars: 5 },
+  { pts: [[-21, -21], [21, -21], [21, 21], [-21, 21]], cars: 4, ccw: true },
+  { pts: [[-7, -7], [7, -7], [7, 7], [-7, 7]], cars: 2 },
+  { pts: [[-35, -21], [-7, -21], [-7, 21], [-35, 21]], cars: 3, ccw: true },
+  { pts: [[7, -35], [35, -35], [35, 7], [7, 7]], cars: 3, ccw: true },
+  { pts: [[21, -7], [49, -7], [49, 21], [21, 21]], cars: 3 },
 ];
 const TRAFFIC_KINDS = ['sedan', 'taxi', 'suv', 'sedan', 'van', 'sportscar', 'taxi', 'sedan'];
 const TRAFFIC_COLORS = ['#f4f4f2', '#141414', '#9aa0a6', '#7a1015', '#1f3c78', '#2e4a3a', '#c9c3b5', '#3b3f45'];
@@ -322,7 +327,7 @@ function laneLoop(pts: [number, number][], off: number) {
 export function Traffic() {
   const cars = useMemo(() => {
     const r = seeded(77);
-    const out: { path: [number, number][]; segs: number[]; total: number; d: number; v: number; kind: string; color: string }[] = [];
+    const out: { path: [number, number][]; segs: number[]; total: number; d: number; v: number; speed: number; x: number; z: number; hx: number; hz: number; kind: string; color: string }[] = [];
     let k = 0;
     for (const L of LOOPS) {
       const base = L.ccw ? [...L.pts].reverse() : L.pts;
@@ -330,7 +335,11 @@ export function Traffic() {
       const segs = path.map((p, i) => Math.hypot(path[(i + 1) % path.length][0] - p[0], path[(i + 1) % path.length][1] - p[1]));
       const total = segs.reduce((a, b) => a + b, 0);
       for (let i = 0; i < L.cars; i++, k++)
-        out.push({ path, segs, total, d: (total / L.cars) * (i + r() * 0.4), v: 4.5 + r() * 2.5, kind: TRAFFIC_KINDS[k % TRAFFIC_KINDS.length], color: TRAFFIC_COLORS[(k * 3) % TRAFFIC_COLORS.length] });
+        out.push({
+          path, segs, total, d: (total / L.cars) * (i + r() * 0.4), v: 4.5 + r() * 2.5, speed: 0,
+          x: 0, z: 0, hx: 0, hz: 1,
+          kind: TRAFFIC_KINDS[k % TRAFFIC_KINDS.length], color: TRAFFIC_COLORS[(k * 3) % TRAFFIC_COLORS.length],
+        });
     }
     return out;
   }, []);
@@ -341,12 +350,23 @@ export function Traffic() {
     cars.forEach((c, i) => {
       const g = refs.current[i];
       if (!g) return;
-      c.d = (c.d + c.v * step) % c.total;
+      // Brake for a car just ahead in the same lane (routes overlap on shared streets).
+      let blocked = false;
+      for (const o of cars) {
+        if (o === c || c.hx * o.hx + c.hz * o.hz < 0.7) continue;
+        const dx = o.x - c.x, dz = o.z - c.z;
+        const ahead = dx * c.hx + dz * c.hz;
+        if (ahead > 0.1 && ahead < 4.2 && Math.abs(dx * c.hz - dz * c.hx) < 0.9) { blocked = true; break; }
+      }
+      c.speed += ((blocked ? 0 : c.v) - c.speed) * Math.min(1, step * (blocked ? 8 : 2));
+      c.d = (c.d + c.speed * step) % c.total;
       let d = c.d, s = 0;
       while (d > c.segs[s]) { d -= c.segs[s]; s++; }
       const p = c.path[s], q = c.path[(s + 1) % c.path.length];
       const t = d / c.segs[s];
       g.position.set(p[0] + (q[0] - p[0]) * t, 0, p[1] + (q[1] - p[1]) * t);
+      c.x = g.position.x; c.z = g.position.z;
+      c.hx = (q[0] - p[0]) / c.segs[s]; c.hz = (q[1] - p[1]) / c.segs[s];
       const want = Math.atan2(q[0] - p[0], q[1] - p[1]);
       let diff = want - g.rotation.y;
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
@@ -380,7 +400,7 @@ export function Pedestrians() {
       for (const [a, b] of spans([X0, X1], ROAD_X))
         for (const side of [-1, 1]) lanes.push({ a: [a + 0.8, z + side * (RW / 2 + 0.7)], b: [b - 0.8, z + side * (RW / 2 + 0.7)] });
     for (const x of ROAD_X)
-      for (const [a, b] of spans([Z0, 21], ROAD_Z))
+      for (const [a, b] of spans([VZ0 - 1.5, VZ1 + 1.5], ROAD_Z))
         for (const side of [-1, 1]) lanes.push({ a: [x + side * (RW / 2 + 0.7), a + 0.8], b: [x + side * (RW / 2 + 0.7), b - 0.8] });
     return Array.from({ length: 26 }, (_, i) => {
       const L = lanes[Math.floor(r() * lanes.length)];
@@ -473,11 +493,33 @@ export function Skyline() {
   );
 }
 
+/** Private runway along the north shore, with edge lights that glow at night. */
+export function Runway() {
+  const a = X0 + 6, b = X1 - 6;
+  const dashes = useMemo(() => {
+    const out: [number, number, number, number][] = [];
+    for (let x = a + 3; x < b - 3; x += 5) out.push([x, RUNWAY_Z, 2.4, 0.18]);
+    return out;
+  }, [a, b]);
+  const lights = useMemo(() => {
+    const out: V3[] = [];
+    for (let x = a; x <= b; x += 4) out.push([x, 0.1, RUNWAY_Z - 3.2], [x, 0.1, RUNWAY_Z + 3.2]);
+    return out;
+  }, [a, b]);
+  return (
+    <group>
+      <Box size={[b - a, 0.03, 7]} position={[(a + b) / 2, 0.015, RUNWAY_Z]} material={M.asphalt} cast={false} />
+      <Marks items={dashes} material={M.paint} y={0.04} />
+      {[RUNWAY_Z - 3.1, RUNWAY_Z + 3.1].map((z) => <Box key={z} size={[b - a, 0.012, 0.12]} position={[(a + b) / 2, 0.035, z]} material={M.paint} cast={false} />)}
+      {lights.map((p, i) => <mesh key={i} position={p} material={i % 2 ? M.bulb : M.headlight}><sphereGeometry args={[0.12, 6, 4]} /></mesh>)}
+    </group>
+  );
+}
+
 export function Jet() {
   const body = M.white;
   return (
-    <group position={[-14, 0, -26 - 9]} rotation={[0, Math.PI / 2, 0]}>
-      <Box size={[30, 0.05, 6]} position={[0, 0.02, 0]} material={M.asphalt} cast={false} />
+    <group position={[24, 0, RUNWAY_Z]}>
       <group position={[0, 1.4, 0]}>
         <mesh rotation={[0, 0, Math.PI / 2]} material={body} castShadow><capsuleGeometry args={[0.7, 7, 6, 16]} /></mesh>
         <Box size={[1.6, 0.12, 9]} position={[0.3, -0.2, 0]} material={body} />
@@ -496,9 +538,9 @@ export function Island() {
   return (
     <group>
       {/* causeway */}
-      <Box size={[ix - 9 - 24, 0.4, 2.4]} position={[(24 + ix - 9) / 2, -0.25, 0]} material={M.stone} />
-      <Box size={[ix - 9 - 24, 0.3, 0.1]} position={[(24 + ix - 9) / 2, 0.15, 1.15]} material={M.gold} />
-      <Box size={[ix - 9 - 24, 0.3, 0.1]} position={[(24 + ix - 9) / 2, 0.15, -1.15]} material={M.gold} />
+      <Box size={[ix - 9 - X1, 0.4, 2.4]} position={[(X1 + ix - 9) / 2, -0.25, 0]} material={M.stone} />
+      <Box size={[ix - 9 - X1, 0.3, 0.1]} position={[(X1 + ix - 9) / 2, 0.15, 1.15]} material={M.gold} />
+      <Box size={[ix - 9 - X1, 0.3, 0.1]} position={[(X1 + ix - 9) / 2, 0.15, -1.15]} material={M.gold} />
       <group position={[ix, 0, iz]}>
         <Cyl r={11} rTop={10} h={1.2} position={[0, -0.6, 0]} material={M.sand} seg={40} />
         <Cyl r={8} h={0.2} position={[0, 0, 0]} material={M.lawn} seg={40} />
@@ -556,7 +598,7 @@ export function Boats() {
       <Box size={[1.4, 0.25, 9]} position={[pier[0] + 9.5, -0.05, pier[1]]} material={M.teak} />
       {[2, 4.5, 7, 9.8].map((x) => <Cyl key={x} r={0.12} h={1.4} position={[pier[0] + x, -0.5, pier[1] + 0.9]} material={M.trunk} seg={6} />)}
       <group ref={ref}>
-        {([[X1 + 6, -18.5, Math.PI / 2, 1.2], [X1 + 6, -11.5, Math.PI / 2, 1], [X1 + 13, -15, 0, 1.4], [36, 20, 0.6, 1.3], [62, 24, -0.4, 1.6], [X0 - 10, 8, 1.3, 1.5]] as [number, number, number, number][]).map(([x, z, r, s], i) => (
+        {([[X1 + 6, -18.5, Math.PI / 2, 1.2], [X1 + 6, -11.5, Math.PI / 2, 1], [X1 + 13, -15, 0, 1.4], [X1 + 9, 28, 0.6, 1.3], [48, Z1 + 14, -0.4, 1.6], [X0 - 10, 8, 1.3, 1.5], [X0 - 8, -30, 0.2, 1.2]] as [number, number, number, number][]).map(([x, z, r, s], i) => (
           <Yacht key={i} position={[x, -0.62, z]} rotation={r} s={s} />
         ))}
       </group>

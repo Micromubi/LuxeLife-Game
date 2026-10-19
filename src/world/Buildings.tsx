@@ -186,7 +186,7 @@ export function BoutiqueStore() {
   );
 }
 
-function SearchLight({ position, phase }: { position: V3; phase: number }) {
+export function SearchLight({ position, phase }: { position: V3; phase: number }) {
   const ref = useRef<THREE.Mesh>(null);
   const mat = useMemo(() => new THREE.MeshBasicMaterial({ color: '#fff2c4', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }), []);
   useFrame(({ clock }) => {

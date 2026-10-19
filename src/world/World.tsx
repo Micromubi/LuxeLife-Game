@@ -7,17 +7,16 @@ import type { OrbitControls as OrbitImpl, Sky as SkyImpl } from 'three-stdlib';
 import { useGame } from '../game/store';
 import { itemById } from '../game/config';
 import { money } from '../lib/format';
-import { BIZ_PLOTS, BIZ_Z, CITY_LOCS, ISLAND_POS, LOCS, type LocId } from './layout';
+import { BIZ_PLOTS, BIZ_Z, CITY_LOCS, FILLER, ISLAND_POS, LOCS, type LocId } from './layout';
 import { updateGlow, world, M } from './materials';
 import { Bank, BoutiqueStore, BusinessBuilding, Club, EmptyLot, Office, Plaza, Residence, Restaurant, Spa } from './Buildings';
-import { Boats, Car, Greenery, Ground, Island, Jet, Pedestrians, Skyline, StreetLamps, Traffic } from './Props';
+import { Boats, Car, Greenery, Ground, Island, Jet, Pedestrians, Runway, Skyline, StreetLamps, Traffic } from './Props';
+import { Airport, Arena, BeachClub, Casino, Clinic, FillerTower, Gym, Jeweller, Motors, Park, Realty, School } from './Venues';
 import Avatar from './Avatar';
 
 const RES_ORDER = ['villa', 'penthouse', 'apartment', 'flat'];
 const CAR_ORDER = ['hypercar', 'sportscar', 'suv', 'sedan'];
-export const LOC_ICON: Record<LocId, string> = {
-  bank: '🏦', office: '💼', restaurant: '🍽️', home: '🏠', plaza: '⛲', spa: '💆', boutique: '👜', club: '🍸', ventures: '🏗️', island: '🏝️',
-};
+
 
 export default function World() {
   const gfx = useGame((s) => s.settings.gfx ?? 'high');
@@ -168,11 +167,15 @@ function CameraRig() {
   const focus = useGame((s) => s.focus);
   const anim = useRef<{ target: THREE.Vector3; cam: THREE.Vector3; t: number } | null>(null);
   const recenter = useRef(world.recenter);
+  /** Chase the player only for a trip that started after the last place you clicked. */
+  const follow = useRef(false);
+  const wasMoving = useRef(false);
   const { camera } = useThree();
   const tmp = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => {
     if (!focus || !controls.current) return;
+    follow.current = false;
     const L = LOCS[focus.loc];
     const target = new THREE.Vector3(L.pos[0], 2, L.pos[1]);
     const offset = camera.position.clone().sub(controls.current.target);
@@ -184,9 +187,12 @@ function CameraRig() {
     const c = controls.current;
     if (!c) return;
     world.cam.yaw = Math.atan2(c.target.x - camera.position.x, c.target.z - camera.position.z);
+    if (world.avatar.moving && !wasMoving.current) follow.current = true;
+    wasMoving.current = world.avatar.moving;
 
     if (world.recenter !== recenter.current) {
       recenter.current = world.recenter;
+      follow.current = true;
       const target = new THREE.Vector3(world.avatar.x, 1.5, world.avatar.z);
       const offset = camera.position.clone().sub(c.target).setLength(26);
       anim.current = { target, cam: target.clone().add(offset), t: 0 };
@@ -202,7 +208,7 @@ function CameraRig() {
       return;
     }
     // Chase cam: while the player travels, slide the view along with them.
-    if (world.avatar.moving) {
+    if (world.avatar.moving && follow.current) {
       tmp.set(world.avatar.x, 1.5, world.avatar.z).sub(c.target);
       tmp.multiplyScalar(1 - Math.exp(-dt * 3));
       c.target.add(tmp);
@@ -246,7 +252,7 @@ function Hotspot({ loc, children, labelY = 7, sub }: { loc: LocId; children: Rea
         onPointerOver={(e) => { e.stopPropagation(); setHover(true); }}
         onPointerOut={() => setHover(false)}
       >
-        {children}
+        <group rotation={[0, L.facesNorth ? Math.PI : 0, 0]}>{children}</group>
         {/* invisible hit area so the whole plot is clickable */}
         <mesh position={[0, 0.2, 0]} visible={false}><boxGeometry args={[11, 0.4, 11]} /></mesh>
       </group>
@@ -260,7 +266,7 @@ function Hotspot({ loc, children, labelY = 7, sub }: { loc: LocId; children: Rea
           onMouseLeave={() => setHover(false)}
           className={`hud-text flex items-center gap-1.5 whitespace-nowrap text-left transition ${hover ? 'scale-110' : 'opacity-90'}`}
         >
-          <span className={`grid h-7 w-7 place-items-center rounded-full border text-[14px] shadow-lg ${hover ? 'border-gold bg-black/85' : 'border-white/40 bg-black/60'}`}>{LOC_ICON[loc]}</span>
+          <span className={`grid h-7 w-7 place-items-center rounded-full border text-[14px] shadow-lg ${hover ? 'border-gold bg-black/85' : 'border-white/40 bg-black/60'}`}>{L.icon}</span>
           <span>
             <span className="block font-hud text-[14px] uppercase leading-none tracking-wide text-white">{L.label}</span>
             <span className={`block text-[10px] font-semibold leading-tight text-gold-light transition-opacity ${hover ? 'opacity-100' : 'opacity-0'}`}>{sub ?? L.hint}</span>
@@ -293,8 +299,13 @@ function City() {
 
   const BUILD: Record<string, ReactNode> = {
     bank: <Bank />, office: <Office />, restaurant: <Restaurant />, plaza: <Plaza />, spa: <Spa />, boutique: <BoutiqueStore />, club: <Club />,
+    school: <School />, realty: <Realty />, motors: <Motors />, jeweller: <Jeweller />, airport: <Airport />,
+    clinic: <Clinic />, gym: <Gym />, casino: <Casino />, arena: <Arena />, beachclub: <BeachClub />,
   };
-  const LABEL_Y: Record<string, number> = { office: 35, bank: 9, restaurant: 8, plaza: 6, spa: 8, boutique: 7.5, club: 9 };
+  const LABEL_Y: Record<string, number> = {
+    office: 35, bank: 9, restaurant: 8, plaza: 6, spa: 8, boutique: 7.5, club: 9,
+    school: 19, realty: 9, motors: 7, jeweller: 10, airport: 15, clinic: 14, gym: 8, casino: 12, arena: 10, beachclub: 6.5,
+  };
 
   return (
     <group>
@@ -306,6 +317,13 @@ function City() {
         <Residence kind={home} />
         {cars.map((c, i) => <ParkedCar key={c} kind={c} inUse={i === 0} position={[-3.6 + i * 2.1, 0, 4.2]} />)}
       </Hotspot>
+
+      {FILLER.map((f) => (
+        <group key={`${f.x},${f.z}`} position={[f.x, 0, f.z]}>
+          {f.kind === 'park' ? <Park /> : <FillerTower h={f.h} style={f.style} />}
+        </group>
+      ))}
+      <Runway />
 
       <VenturesRow owned={owned} counts={counts} />
       {owned.has('island') && (
@@ -319,7 +337,7 @@ function City() {
       {owned.has('jet') && <Jet />}
       {/* a hint of what's out there */}
       {!owned.has('island') && (
-        <mesh position={[ISLAND_POS[0] + 20, -0.4, -30]} material={M.sand}><cylinderGeometry args={[5, 6, 1, 24]} /></mesh>
+        <mesh position={[ISLAND_POS[0], -0.4, -26]} material={M.sand}><cylinderGeometry args={[5, 6, 1, 24]} /></mesh>
       )}
     </group>
   );

@@ -3,12 +3,9 @@ import { useGame } from '../game/store';
 import * as E from '../game/engine';
 import { CRITICAL } from '../game/config';
 import { money } from '../lib/format';
-import { CITY_LOCS, LOCS, type LocId } from '../world/layout';
+import { BOUNDS, CITY_LOCS, ISLAND_POS, LOCS, ROADS_X, ROADS_Z, ROAD_Z_SPAN, RUNWAY_Z, type LocId } from '../world/layout';
 import { world } from '../world/materials';
 
-const ICON: Record<LocId, string> = {
-  bank: '🏦', office: '💼', restaurant: '🍽️', home: '🏠', plaza: '⛲', spa: '💆', boutique: '👜', club: '🍸', ventures: '🏗️', island: '🏝️',
-};
 
 // ───────────────────────── money ─────────────────────────
 
@@ -49,8 +46,6 @@ export function MoneyHud() {
 
 // ───────────────────────── radar ─────────────────────────
 
-const ROADS_Z = [-21, -7, 7, 21];
-const ROADS_X = [-21, -7, 7, 21];
 
 /** A GTA-style radar: rotates with the camera, follows the player, tap a blip to go there. */
 export function Radar() {
@@ -104,21 +99,25 @@ export function Radar() {
       x.translate(-ax, -az);
       x.fillStyle = '#4b4e52';
       x.fillRect(-240, -360, 520, 220); // mainland
+      const { x0, x1, z0, z1 } = BOUNDS;
       x.fillStyle = '#c9b27a';
-      x.fillRect(-37, 40, 66, 9); // beach
+      x.fillRect(x0 - 5, z1, x1 - x0 + 10, 9); // beach
       x.fillStyle = '#5a5d61';
-      x.fillRect(-32, -26, 56, 66); // city
+      x.fillRect(x0, z0, x1 - x0, z1 - z0); // city
+      x.fillStyle = '#34373b';
+      x.fillRect(x0 + 6, RUNWAY_Z - 3.5, x1 - x0 - 12, 7); // runway
       if (g.assets.some((a) => a.itemId === 'island')) {
+        const [ix, iz] = ISLAND_POS;
         x.fillStyle = '#c9b27a';
-        x.beginPath(); x.arc(46, 0, 11, 0, Math.PI * 2); x.fill();
+        x.beginPath(); x.arc(ix, iz, 11, 0, Math.PI * 2); x.fill();
         x.fillStyle = '#5b7a45';
-        x.beginPath(); x.arc(46, 0, 8, 0, Math.PI * 2); x.fill();
+        x.beginPath(); x.arc(ix, iz, 8, 0, Math.PI * 2); x.fill();
         x.fillStyle = '#9a9a9a';
-        x.fillRect(24, -1.2, 13, 2.4);
+        x.fillRect(x1, iz - 1.2, ix - 9 - x1, 2.4);
       }
       x.fillStyle = '#e9e9e9';
-      for (const z of ROADS_Z) x.fillRect(-32, z - 1.5, 56, 3);
-      for (const rx of ROADS_X) x.fillRect(rx - 1.5, -26, 3, 48.5);
+      for (const z of ROADS_Z) x.fillRect(x0, z - 1.5, x1 - x0, 3);
+      for (const rx of ROADS_X) x.fillRect(rx - 1.5, ROAD_Z_SPAN[0] - 1.5, 3, ROAD_Z_SPAN[1] - ROAD_Z_SPAN[0] + 3);
       x.restore();
 
       // blips (kept upright, pinned to the rim when off-radar)
@@ -134,7 +133,7 @@ export function Radar() {
         if (d > max) { sx = R + (dx / d) * max; sy = R + (dy / d) * max; }
         x.fillStyle = 'rgba(0,0,0,0.65)';
         x.beginPath(); x.arc(sx, sy, size / 17, 0, Math.PI * 2); x.fill();
-        x.fillText(ICON[l], sx, sy + 1);
+        x.fillText(LOCS[l].icon, sx, sy + 1);
         blips.current.push({ loc: l, x: sx, y: sy });
       }
 
