@@ -23,44 +23,45 @@ export interface Loc {
 }
 
 /**
- * City grid: blocks centred on x ∈ {-28, -14, 0, 14, 28, 42} and z ∈ {-28, -14, 0, 14},
- * a business row at z = 30 and a runway along the north shore.
- * Roads run along x = -35 … 49 and z = -35 … 21, every 14 units.
+ * City grid: spacious 22-unit blocks centred on x ∈ {-66 … 66} and z ∈ {-44, -22, 0, 22},
+ * each building on its own landscaped lawn, a business row at z = 46 and a runway along the north shore.
+ * Roads run along x = -77 … 77 and z = -55 … 33.
  */
-export const ROADS_X = [-35, -21, -7, 7, 21, 35, 49];
-export const ROADS_Z = [-35, -21, -7, 7, 21];
-export const BOUNDS = { x0: -42, x1: 56, z0: -50, z1: 40 };
+export const BLOCK = 22;
+export const ROADS_X = [-77, -55, -33, -11, 11, 33, 55, 77];
+export const ROADS_Z = [-55, -33, -11, 11, 33];
+export const BOUNDS = { x0: -88, x1: 88, z0: -74, z1: 58 };
 /** Vertical roads run between the northern- and southern-most streets. */
-export const ROAD_Z_SPAN: [number, number] = [-35, 21];
-export const RUNWAY_Z = -44;
+export const ROAD_Z_SPAN: [number, number] = [-55, 33];
+export const RUNWAY_Z = -66;
 
-const at = (x: number, z: number): { pos: [number, number]; door: [number, number] } => ({ pos: [x, z], door: [x, z + 7] });
+const at = (x: number, z: number): { pos: [number, number]; door: [number, number] } => ({ pos: [x, z], door: [x, z + BLOCK / 2] });
 
 export const LOCS: Record<LocId, Loc> = {
-  bank: { id: 'bank', label: 'Private Bank', icon: '🏦', ...at(-14, -14), tab: 'Finance', hint: 'Loans & credit' },
-  office: { id: 'office', label: 'Sterling & Vane Tower', icon: '💼', ...at(0, -14), tab: 'Actions', groups: ['Work'], hint: 'Work shifts' },
-  restaurant: { id: 'restaurant', label: 'Maison Dorée', icon: '🍽️', ...at(14, -14), tab: 'Actions', groups: ['Dine'], hint: 'Dine' },
-  home: { id: 'home', label: 'Home', icon: '🏠', ...at(-14, 0), tab: 'Actions', groups: ['Rest', 'Care'], hint: 'Sleep, rest & freshen up' },
+  bank: { id: 'bank', label: 'Private Bank', icon: '🏦', ...at(-22, -22), tab: 'Finance', hint: 'Loans & credit' },
+  office: { id: 'office', label: 'Sterling & Vane Tower', icon: '💼', ...at(0, -22), tab: 'Actions', groups: ['Work'], hint: 'Work shifts' },
+  restaurant: { id: 'restaurant', label: 'Maison Dorée', icon: '🍽️', ...at(22, -22), tab: 'Actions', groups: ['Dine'], hint: 'Dine' },
+  home: { id: 'home', label: 'Home', icon: '🏠', ...at(-22, 0), tab: 'Actions', groups: ['Rest', 'Care'], hint: 'Sleep, rest & freshen up' },
   plaza: { id: 'plaza', label: 'Gilded Plaza', icon: '⛲', ...at(0, 0), tab: 'Ledger', hint: 'Your ledger' },
-  spa: { id: 'spa', label: 'Aurum Spa', icon: '💆', ...at(14, 0), tab: 'Actions', groups: ['Care'], hint: 'Grooming & spa' },
-  boutique: { id: 'boutique', label: 'The Boutique', icon: '👜', ...at(-14, 14), tab: 'Boutique', hint: 'Buy luxury' },
-  club: { id: 'club', label: 'Club Noir', icon: '🍸', ...at(0, 14), tab: 'Actions', groups: ['Society'], hint: 'Society & networking' },
-  ventures: { id: 'ventures', label: 'Ventures Row', icon: '🏗️', pos: [-4, 30], door: [-4, 21], tab: 'Boutique', shopCat: 'BUSINESS', hint: 'Buy & run businesses' },
-  island: { id: 'island', label: 'Private Island', icon: '🏝️', pos: [96, 0], door: [49, 7], tab: 'Actions', groups: ['Rest', 'Care'], hint: 'Your island' },
+  spa: { id: 'spa', label: 'Aurum Spa', icon: '💆', ...at(22, 0), tab: 'Actions', groups: ['Care'], hint: 'Grooming & spa' },
+  boutique: { id: 'boutique', label: 'The Boutique', icon: '👜', ...at(-22, 22), tab: 'Boutique', hint: 'Buy luxury' },
+  club: { id: 'club', label: 'Club Noir', icon: '🍸', ...at(0, 22), tab: 'Actions', groups: ['Society'], hint: 'Society & networking' },
+  ventures: { id: 'ventures', label: 'Ventures Row', icon: '🏗️', pos: [-5.5, 46], door: [-5.5, 33], tab: 'Boutique', shopCat: 'BUSINESS', hint: 'Buy & run businesses' },
+  island: { id: 'island', label: 'Private Island', icon: '🏝️', pos: [130, 0], door: [77, 11], tab: 'Actions', groups: ['Rest', 'Care'], hint: 'Your island' },
 
   // West end
-  school: { id: 'school', label: 'Whitmore Business School', icon: '🎓', ...at(-28, -14), tab: 'Actions', groups: ['Study'], hint: 'Classes count toward promotion' },
-  realty: { id: 'realty', label: 'Skyline Realty', icon: '🏘️', ...at(-28, 0), tab: 'Boutique', shopCat: 'RESIDENCE', hint: 'Homes & rentals' },
-  motors: { id: 'motors', label: 'Prestige Motors', icon: '🏎️', ...at(-28, 14), tab: 'Boutique', shopCat: 'VEHICLE', hint: 'Cars & jets' },
+  school: { id: 'school', label: 'Whitmore Business School', icon: '🎓', ...at(-44, -22), tab: 'Actions', groups: ['Study'], hint: 'Classes count toward promotion' },
+  realty: { id: 'realty', label: 'Skyline Realty', icon: '🏘️', ...at(-44, 0), tab: 'Boutique', shopCat: 'RESIDENCE', hint: 'Homes & rentals' },
+  motors: { id: 'motors', label: 'Prestige Motors', icon: '🏎️', ...at(-44, 22), tab: 'Boutique', shopCat: 'VEHICLE', hint: 'Cars & jets' },
   // North row
-  jeweller: { id: 'jeweller', label: 'Aurelia Jewellers', icon: '💎', ...at(-14, -28), tab: 'Boutique', shopCat: 'ACCESSORY', hint: 'Watches & jewels' },
-  airport: { id: 'airport', label: 'Sky Harbour Terminal', icon: '✈️', ...at(28, -28), tab: 'Actions', groups: ['Travel'], hint: 'Trips & getaways' },
+  jeweller: { id: 'jeweller', label: 'Aurelia Jewellers', icon: '💎', ...at(-22, -44), tab: 'Boutique', shopCat: 'ACCESSORY', hint: 'Watches & jewels' },
+  airport: { id: 'airport', label: 'Sky Harbour Terminal', icon: '✈️', ...at(44, -44), tab: 'Actions', groups: ['Travel'], hint: 'Trips & getaways' },
   // East end
-  clinic: { id: 'clinic', label: 'St. Regis Clinic', icon: '🏥', ...at(28, -14), tab: 'Actions', groups: ['Health'], hint: 'Check-ups & treatment' },
-  gym: { id: 'gym', label: 'Iron & Oak Gym', icon: '🏋️', ...at(28, 0), tab: 'Actions', groups: ['Fitness'], hint: 'Train for health' },
-  casino: { id: 'casino', label: 'Golden Palace Casino', icon: '🎰', ...at(28, 14), tab: 'Actions', groups: ['Gamble'], hint: 'Try your luck' },
-  arena: { id: 'arena', label: 'Crown Arena', icon: '🏟️', ...at(42, -14), tab: 'Actions', groups: ['Events'], hint: 'Matches & concerts' },
-  beachclub: { id: 'beachclub', label: 'Azure Beach Club', icon: '🏖️', pos: [42, 30], door: [42, 21], facesNorth: true, tab: 'Actions', groups: ['Leisure'], hint: 'Beach, cabanas & yachts' },
+  clinic: { id: 'clinic', label: 'St. Regis Clinic', icon: '🏥', ...at(44, -22), tab: 'Actions', groups: ['Health'], hint: 'Check-ups & treatment' },
+  gym: { id: 'gym', label: 'Iron & Oak Gym', icon: '🏋️', ...at(44, 0), tab: 'Actions', groups: ['Fitness'], hint: 'Train for health' },
+  casino: { id: 'casino', label: 'Golden Palace Casino', icon: '🎰', ...at(44, 22), tab: 'Actions', groups: ['Gamble'], hint: 'Try your luck' },
+  arena: { id: 'arena', label: 'Crown Arena', icon: '🏟️', ...at(66, -22), tab: 'Actions', groups: ['Events'], hint: 'Matches & concerts' },
+  beachclub: { id: 'beachclub', label: 'Azure Beach Club', icon: '🏖️', pos: [66, 46], door: [66, 33], facesNorth: true, tab: 'Actions', groups: ['Leisure'], hint: 'Beach, cabanas & yachts' },
 };
 
 /** Clickable buildings shown in the city. */
@@ -71,26 +72,32 @@ export const CITY_LOCS: LocId[] = [
 
 /** Non-clickable filler: towers and parks that make the city feel lived-in. */
 export const FILLER: { x: number; z: number; kind: 'tower' | 'park'; h?: number; style?: number }[] = [
-  { x: -28, z: -28, kind: 'tower', h: 18, style: 1 },
-  { x: 0, z: -28, kind: 'tower', h: 30, style: 2 },
-  { x: 14, z: -28, kind: 'tower', h: 22, style: 0 },
-  { x: 42, z: -28, kind: 'tower', h: 14, style: 3 },
-  { x: 42, z: 0, kind: 'park' },
-  { x: 42, z: 14, kind: 'tower', h: 26, style: 0 },
+  { x: -44, z: -44, kind: 'park' },
+  { x: 0, z: -44, kind: 'tower', h: 30, style: 2 },
+  { x: 22, z: -44, kind: 'park' },
+  { x: 66, z: -44, kind: 'tower', h: 16, style: 3 },
+  { x: 66, z: 0, kind: 'park' },
+  { x: 22, z: 22, kind: 'park' },
+  { x: 66, z: 22, kind: 'tower', h: 26, style: 0 },
+  // West Gardens: a column of parkland with a couple of residential towers
+  { x: -66, z: -44, kind: 'tower', h: 20, style: 1 },
+  { x: -66, z: -22, kind: 'park' },
+  { x: -66, z: 0, kind: 'park' },
+  { x: -66, z: 22, kind: 'tower', h: 14, style: 3 },
 ];
 
 /** Business plots along Ventures Row, one per business type. */
 export const BIZ_PLOTS: { itemId: string; x: number }[] = [
-  { itemId: 'foodcart', x: -28 },
-  { itemId: 'reseller', x: -21 },
-  { itemId: 'carwash', x: -14 },
-  { itemId: 'cafe', x: -7 },
+  { itemId: 'foodcart', x: -44 },
+  { itemId: 'reseller', x: -33 },
+  { itemId: 'carwash', x: -22 },
+  { itemId: 'cafe', x: -11 },
   { itemId: 'boutique', x: 0 },
-  { itemId: 'nightclub', x: 7 },
-  { itemId: 'techfirm', x: 14 },
-  { itemId: 'holding', x: 21 },
+  { itemId: 'nightclub', x: 11 },
+  { itemId: 'techfirm', x: 22 },
+  { itemId: 'holding', x: 33 },
 ];
-export const BIZ_Z = 30;
+export const BIZ_Z = 46;
 
 export const ACTION_LOC: Record<string, LocId> = {
   work: 'office', overtime: 'office', manage: 'ventures',
@@ -120,7 +127,7 @@ export function purchaseLoc(category: string, g: GameState): LocId {
 }
 
 export const ISLAND_POS = LOCS.island.pos;
-const ISLAND_PATH: [number, number][] = [[49, 0], [BOUNDS.x1, 0], [ISLAND_POS[0] - 4, 0]];
+const ISLAND_PATH: [number, number][] = [[77, 0], [BOUNDS.x1, 0], [ISLAND_POS[0] - 4, 0]];
 
 function dedupe(pts: [number, number][], start: [number, number]) {
   const out: [number, number][] = [];

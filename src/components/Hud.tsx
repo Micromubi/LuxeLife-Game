@@ -70,7 +70,7 @@ export function Radar() {
     cv.width = size * dpr;
     cv.height = size * dpr;
     const x = cv.getContext('2d')!;
-    const S = size / 110; // pixels per world unit
+    const S = size / 140; // pixels per world unit
     const R = size / 2;
     let raf = 0;
 
@@ -96,7 +96,7 @@ export function Radar() {
       x.translate(-ax, -az);
       const { x0, x1, z0, z1 } = BOUNDS;
       x.fillStyle = '#2a2724';
-      x.fillRect(-240, -360, 520, 220); // mainland
+      x.fillRect(-300, -410, 600, 220); // mainland
       x.fillStyle = '#5b5040';
       x.fillRect(x0 - 5, z1, x1 - x0 + 10, 9); // beach
       x.fillStyle = '#26231f';

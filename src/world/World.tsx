@@ -7,9 +7,9 @@ import type { OrbitControls as OrbitImpl, Sky as SkyImpl } from 'three-stdlib';
 import { useGame } from '../game/store';
 import { itemById } from '../game/config';
 import { money } from '../lib/format';
-import { BIZ_PLOTS, BIZ_Z, CITY_LOCS, FILLER, ISLAND_POS, LOCS, type LocId } from './layout';
+import { BIZ_PLOTS, BIZ_Z, BLOCK, CITY_LOCS, FILLER, ISLAND_POS, LOCS, type LocId } from './layout';
 import { updateGlow, world, M } from './materials';
-import { Bank, BoutiqueStore, BusinessBuilding, Club, EmptyLot, Office, Plaza, Residence, Restaurant, Spa } from './Buildings';
+import { Bank, Box, BoutiqueStore, BusinessBuilding, Club, EmptyLot, Office, Plaza, Residence, Restaurant, Spa, Tree } from './Buildings';
 import { Boats, Car, Greenery, Ground, Island, Jet, Pedestrians, Runway, Skyline, StreetLamps, Traffic } from './Props';
 import { Airport, Arena, BeachClub, Casino, Clinic, FillerTower, Gym, Jeweller, Motors, Park, Realty, School } from './Venues';
 import Avatar from './Avatar';
@@ -27,7 +27,7 @@ export default function World() {
     <Canvas
       shadows={low ? 'basic' : 'soft'}
       dpr={low ? 1 : [1, 1.75]}
-      camera={{ position: [10, 34, 52], fov: 42, near: 0.5, far: 900 }}
+      camera={{ position: [14, 48, 74], fov: 42, near: 0.5, far: 1100 }}
       gl={{ antialias: false, powerPreference: 'high-performance', stencil: false }}
       onCreated={({ gl }) => { gl.toneMapping = THREE.ACESFilmicToneMapping; gl.toneMappingExposure = 1.0; }}
     >
@@ -95,7 +95,7 @@ function DayNight({ low }: { low: boolean }) {
   const [stars, setStars] = useState(false);
   const fogC = useMemo(() => new THREE.Color(), []);
   const sunDir = useMemo(() => new THREE.Vector3(), []);
-  useMemo(() => { scene.fog = new THREE.Fog('#b9cad8', 90, 470); }, [scene]);
+  useMemo(() => { scene.fog = new THREE.Fog('#b9cad8', 120, 600); }, [scene]);
 
   useFrame(({ clock }) => {
     const { game, settings } = useGame.getState();
@@ -126,7 +126,7 @@ function DayNight({ low }: { low: boolean }) {
     scene.environmentIntensity = 0.75 - night * 0.5;
 
     if (sun.current) {
-      sun.current.position.set(sunDir.x * 90, Math.max(6, sunDir.y * 90), sunDir.z * 90 + 30);
+      sun.current.position.set(sunDir.x * 140, Math.max(10, sunDir.y * 140), sunDir.z * 140 + 30);
       sun.current.intensity = Math.max(0, sy) * 2.3 + dusk * 0.6;
       sun.current.color.copy(SUN_DAY).lerp(SUN_LOW, dusk);
     }
@@ -148,12 +148,12 @@ function DayNight({ low }: { low: boolean }) {
       <directionalLight
         ref={sun}
         castShadow
-        shadow-mapSize={low ? [1024, 1024] : [2048, 2048]}
-        shadow-camera-left={-62}
-        shadow-camera-right={62}
-        shadow-camera-top={62}
-        shadow-camera-bottom={-62}
-        shadow-camera-far={300}
+        shadow-mapSize={low ? [1024, 1024] : [4096, 4096]}
+        shadow-camera-left={-100}
+        shadow-camera-right={100}
+        shadow-camera-top={100}
+        shadow-camera-bottom={-100}
+        shadow-camera-far={360}
         shadow-bias={-0.0004}
         shadow-normalBias={0.04}
       />
@@ -240,10 +240,9 @@ function CameraRig() {
       ref={controls}
       makeDefault
       target={[-8, 0, 4]}
-      enableDamping
-      dampingFactor={0.08}
+      enableDamping={false}
       minDistance={8}
-      maxDistance={150}
+      maxDistance={230}
       minPolarAngle={0.2}
       maxPolarAngle={1.38}
       onStart={() => { anim.current = null; }}
@@ -270,6 +269,7 @@ function Hotspot({ loc, children, labelY = 7, sub }: { loc: LocId; children: Rea
         onPointerOver={(e) => { e.stopPropagation(); setHover(true); }}
         onPointerOut={() => setHover(false)}
       >
+        {!L.facesNorth && loc !== 'island' && <Grounds />}
         <group rotation={[0, L.facesNorth ? Math.PI : 0, 0]}>{children}</group>
         {/* invisible hit area so the whole plot is clickable */}
         <mesh position={[0, 0.2, 0]} visible={false}><boxGeometry args={[11, 0.4, 11]} /></mesh>
@@ -291,6 +291,21 @@ function Hotspot({ loc, children, labelY = 7, sub }: { loc: LocId; children: Rea
           </span>
         </button>
       </Html>
+    </group>
+  );
+}
+
+/** A landscaped lot around each venue: lawn, low hedges, a paved walk to the street and corner trees. */
+function Grounds() {
+  const half = BLOCK / 2 - 2.2;
+  return (
+    <group>
+      <Box size={[half * 2, 0.1, half * 2]} position={[0, 0.05, 0]} material={M.lawn} cast={false} />
+      <Box size={[2.6, 0.12, half - 3]} position={[0, 0.06, half / 2 + 1.5]} material={M.stone} cast={false} />
+      {[-1, 1].map((s) => <Box key={'f' + s} size={[half - 1.8, 0.5, 0.45]} position={[s * (half / 2 + 0.9), 0.3, half - 0.25]} material={M.leaf} />)}
+      <Box size={[half * 2, 0.5, 0.45]} position={[0, 0.3, -half + 0.25]} material={M.leaf} />
+      {[-1, 1].map((s) => <Box key={'s' + s} size={[0.45, 0.5, half * 2]} position={[s * (half - 0.25), 0.3, 0]} material={M.leaf} />)}
+      {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => <Tree key={`${a}${b}`} position={[a * (half - 1.4), 0, b * (half - 1.4)]} s={0.9} />)}
     </group>
   );
 }
@@ -338,7 +353,7 @@ function City() {
 
       {FILLER.map((f) => (
         <group key={`${f.x},${f.z}`} position={[f.x, 0, f.z]}>
-          {f.kind === 'park' ? <Park /> : <FillerTower h={f.h} style={f.style} />}
+          {f.kind === 'park' ? <group scale={1.65}><Park /></group> : <><Grounds /><FillerTower h={f.h} style={f.style} /></>}
         </group>
       ))}
       <Runway />

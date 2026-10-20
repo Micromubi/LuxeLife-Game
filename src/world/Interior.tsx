@@ -427,7 +427,7 @@ function InteriorCamera() {
     <OrbitControls
       makeDefault
       target={[0, 1, -0.5]}
-      enableDamping
+      enableDamping={false}
       enablePan={false}
       minDistance={8}
       maxDistance={24}

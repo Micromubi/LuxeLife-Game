@@ -110,7 +110,7 @@ export default function Avatar() {
   const walking = useRef(false);
 
   const ride = CAR_ORDER.find((c) => g.assets.some((a) => a.itemId === c));
-  const speed = ride ? 9 + E.modifiers(g).commute * 16 : 5.5;
+  const speed = ride ? 12 + E.modifiers(g).commute * 18 : 7.5;
   const ringMat = useMemo(() => new THREE.MeshBasicMaterial({ color: '#E8CF77', transparent: true, opacity: 0.6, depthWrite: false }), []);
 
   // Place at home on first mount.

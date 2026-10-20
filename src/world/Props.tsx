@@ -134,7 +134,7 @@ function Sea({ reflect }: { reflect: boolean }) {
   });
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[20, -0.6, 8]} receiveShadow>
-      <planeGeometry args={[700, 700]} />
+      <planeGeometry args={[900, 900]} />
       {reflect ? (
         <MeshReflectorMaterial
           resolution={512}
@@ -212,7 +212,7 @@ function kerbPoints(offset: number, step: number, phase: number) {
 }
 
 export function StreetLamps() {
-  const pts = useMemo(() => kerbPoints(-(RW / 2 + 0.35), 7, 2.2), []);
+  const pts = useMemo(() => kerbPoints(-(RW / 2 + 0.35), 9, 2.2), []);
   const pool = useMemo(() => new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }), []);
   useFrame(() => { pool.opacity = world.night * 0.85; });
   return (
@@ -232,8 +232,9 @@ export function StreetLamps() {
 }
 
 export function Greenery() {
-  const palms = useMemo(() => kerbPoints(RW / 2 + 0.45, 7, 5.6).filter(([, , v]) => v === 1), []);
-  const trees: V3[] = [[-8.8, 0, 4.5], [19.5, 0, 14], [-39.5, 0, -14], [-39.5, 0, 0], [-39.5, 0, 14], [-39.5, 0, -28], [53.5, 0, -14], [53.5, 0, 14]];
+  const palms = useMemo(() => kerbPoints(RW / 2 + 0.45, 9, 6.5).filter(([, , v]) => v === 1), []);
+  // Shade trees along the east and west waterfronts.
+  const trees: V3[] = [-44, -22, 0, 22].flatMap((z) => [-5, 5].flatMap((o) => [[X0 + 3, 0, z + o] as V3, [X1 - 3, 0, z + o] as V3]));
   return (
     <group>
       {trees.map((p, i) => <Tree key={i} position={p} s={1 + (i % 3) * 0.15} />)}
@@ -296,16 +297,21 @@ export function Car({ kind, position, rotation = 0, color }: { kind: string; pos
 }
 
 /** Closed loops along the road grid (corners at road centres). */
-const LOOPS: { pts: [number, number][]; cars: number; ccw?: boolean }[] = [
-  { pts: [[-35, -35], [49, -35], [49, 21], [-35, 21]], cars: 8 },
-  { pts: [[-35, -35], [49, -35], [49, 21], [-35, 21]], cars: 7, ccw: true },
-  { pts: [[-21, -21], [21, -21], [21, 21], [-21, 21]], cars: 5 },
-  { pts: [[-21, -21], [21, -21], [21, 21], [-21, 21]], cars: 4, ccw: true },
-  { pts: [[-7, -7], [7, -7], [7, 7], [-7, 7]], cars: 2 },
-  { pts: [[-35, -21], [-7, -21], [-7, 21], [-35, 21]], cars: 3, ccw: true },
-  { pts: [[7, -35], [35, -35], [35, 7], [7, 7]], cars: 3, ccw: true },
-  { pts: [[21, -7], [49, -7], [49, 21], [21, 21]], cars: 3 },
-];
+const LOOPS: { pts: [number, number][]; cars: number; ccw?: boolean }[] = (() => {
+  const X = ROAD_X, Z = ROAD_Z;
+  const rect = (a: number, b: number, c: number, d: number): [number, number][] => [[X[a], Z[c]], [X[b], Z[c]], [X[b], Z[d]], [X[a], Z[d]]];
+  const nx = X.length - 1, nz = Z.length - 1;
+  return [
+    { pts: rect(0, nx, 0, nz), cars: 10 },
+    { pts: rect(0, nx, 0, nz), cars: 9, ccw: true },
+    { pts: rect(1, nx - 1, 1, nz - 1), cars: 6 },
+    { pts: rect(1, nx - 1, 1, nz - 1), cars: 5, ccw: true },
+    { pts: rect(0, 3, 1, nz), cars: 4, ccw: true },
+    { pts: rect(4, nx, 0, 3), cars: 4, ccw: true },
+    { pts: rect(2, 5, 0, 2), cars: 3 },
+    { pts: rect(3, 6, 2, nz), cars: 3 },
+  ];
+})();
 const TRAFFIC_KINDS = ['sedan', 'taxi', 'suv', 'sedan', 'van', 'sportscar', 'taxi', 'sedan'];
 const TRAFFIC_COLORS = ['#f4f4f2', '#141414', '#9aa0a6', '#7a1015', '#1f3c78', '#2e4a3a', '#c9c3b5', '#3b3f45'];
 
@@ -402,7 +408,7 @@ export function Pedestrians() {
     for (const x of ROAD_X)
       for (const [a, b] of spans([VZ0 - 1.5, VZ1 + 1.5], ROAD_Z))
         for (const side of [-1, 1]) lanes.push({ a: [x + side * (RW / 2 + 0.7), a + 0.8], b: [x + side * (RW / 2 + 0.7), b - 0.8] });
-    return Array.from({ length: 26 }, (_, i) => {
+    return Array.from({ length: 44 }, (_, i) => {
       const L = lanes[Math.floor(r() * lanes.length)];
       const len = Math.hypot(L.b[0] - L.a[0], L.b[1] - L.a[1]);
       return {
@@ -454,12 +460,12 @@ export function Skyline() {
   const towers = useMemo(() => {
     const r = seeded(101);
     const out: { x: number; z: number; w: number; d: number; h: number; style: number }[] = [];
-    for (let x = -190; x <= 230; x += 13 + r() * 9)
+    for (let x = -230; x <= 250; x += 13 + r() * 9)
       for (let row = 0; row < 3; row++) {
         const core = Math.exp(-(((x + 10) / 70) ** 2));
         // Dense downtown in the middle, scattered low-rise towards the edges.
         if (r() > 0.25 + core * 0.7) continue;
-        const z = -158 - row * 20 - r() * 10;
+        const z = -205 - row * 20 - r() * 10;
         const h = 6 + core * (22 + r() * 48) + r() * 8;
         out.push({ x: x + r() * 5, z, w: 7 + r() * 8, d: 7 + r() * 7, h, style: Math.floor(r() * 4) });
       }
@@ -467,7 +473,7 @@ export function Skyline() {
   }, []);
   const hills = useMemo(() => {
     const r = seeded(55);
-    return Array.from({ length: 18 }, (_, i) => ({ x: -300 + i * 38 + r() * 14, z: -290 - r() * 40, r: 40 + r() * 35, h: 30 + r() * 40 }));
+    return Array.from({ length: 18 }, (_, i) => ({ x: -300 + i * 38 + r() * 14, z: -350 - r() * 40, r: 40 + r() * 35, h: 30 + r() * 40 }));
   }, []);
   // The Luxe crest on the hills: a serif monogram inside a gold ring, lit at night.
   const crest = useMemo(() => {
@@ -477,8 +483,8 @@ export function Skyline() {
 
   return (
     <group>
-      <Box size={[520, 1.4, 220]} position={[20, -0.3, -250]} material={M.stone} cast={false} />
-      <Box size={[520, 0.6, 3]} position={[20, 0.1, -140]} material={M.gold} cast={false} />
+      <Box size={[600, 1.4, 220]} position={[0, -0.3, -300]} material={M.stone} cast={false} />
+      <Box size={[600, 0.6, 3]} position={[0, 0.1, -190]} material={M.gold} cast={false} />
       {towers.map((t, i) => (
         <group key={i}>
           <mesh position={[t.x, t.h / 2, t.z]} material={t.mat}><boxGeometry args={[t.w, t.h, t.d]} /></mesh>
@@ -491,7 +497,7 @@ export function Skyline() {
           <coneGeometry args={[h.r, h.h, 7]} />
         </mesh>
       ))}
-      <group position={[-30, 40, -262]} rotation={[-0.15, 0.1, 0]}>
+      <group position={[-30, 44, -325]} rotation={[-0.15, 0.1, 0]}>
         <mesh material={M.goldGlow}><torusGeometry args={[13, 1.1, 10, 48]} /></mesh>
         <mesh position={[0, 0, 0.3]} material={crest}><planeGeometry args={[22, 22]} /></mesh>
       </group>
