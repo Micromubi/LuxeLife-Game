@@ -4,7 +4,7 @@ import { useGameLoop } from '../hooks/useGameLoop';
 import { CRITICAL, SPEEDS, VIP_THRESHOLD } from '../game/config';
 import * as E from '../game/engine';
 import type { Tab } from '../world/layout';
-import { HomeTaskOverlay, LocationBanner, MoneyHud, Radar } from './Hud';
+import { HomeTaskOverlay, LocationBanner, MoneyHud, QuickActions, Radar } from './Hud';
 import StatusColumn from './StatusColumn';
 import ActionsPanel from './ActionsPanel';
 import Shop from './Shop';
@@ -143,6 +143,7 @@ export default function Dashboard() {
       {/* bottom dock */}
       {!drawer.open && (
         <div className="absolute bottom-4 left-[150px] right-3 z-20 flex flex-col items-center gap-2 sm:left-[230px]">
+          <QuickActions />
           <p className="lux-shadow hidden font-serif text-xs italic text-cream-dim sm:block">{inside ? 'Click the bed, kitchen, shower, sofa or desk to do something · drag to look around' : 'Click a building or the map to go there · drag to look around · scroll to zoom'}</p>
           <div className="flex gap-1.5 overflow-x-auto rounded-2xl border border-white/[0.08] bg-black/65 p-1.5 backdrop-blur">
             {TABS.map((t) => (

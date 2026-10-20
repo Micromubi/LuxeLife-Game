@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../game/store';
 import * as E from '../game/engine';
-import { CRITICAL } from '../game/config';
+import { ACTIONS, CRITICAL } from '../game/config';
 import { money } from '../lib/format';
 import { BOUNDS, CITY_LOCS, ISLAND_POS, LOCS, ROADS_X, ROADS_Z, ROAD_Z_SPAN, RUNWAY_Z, type LocId } from '../world/layout';
 import { world } from '../world/materials';
@@ -202,6 +202,77 @@ function NeedBars() {
                 style={{ width: `${Math.max(0, Math.min(100, v))}%` }} />
             </div>
           </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ───────────────────────── quick actions ─────────────────────────
+
+type Lack = 'energy' | 'hunger' | 'hygiene' | 'social' | 'health';
+const LACK_META: Record<Lack, { label: string; icon: string }> = {
+  energy: { label: 'Energy', icon: '⚡' }, hunger: { label: 'Fullness', icon: '🍽️' }, hygiene: { label: 'Hygiene', icon: '🚿' },
+  social: { label: 'Social', icon: '💬' }, health: { label: 'Health', icon: '❤️' },
+};
+/** Fixes for each need, best first. Energy prefers a proper sleep at night and a nap by day. */
+function candidates(lack: Lack, hour: number): string[] {
+  const night = hour >= 21 || hour < 7;
+  switch (lack) {
+    case 'energy': return night ? ['sleep', 'nap', 'relax'] : ['nap', 'relax', 'sleep'];
+    case 'hunger': return ['cook', 'suya', 'bistro', 'michelin'];
+    case 'hygiene': return ['shower', 'barber', 'spa'];
+    case 'social': return ['call', 'drinks', 'beach', 'match', 'cabana'];
+    case 'health': return ['checkup', 'yoga', 'treatment'];
+  }
+}
+
+/** Up to three one-tap fixes for whatever you're lacking most. */
+export function QuickActions() {
+  const g = useGame((s) => s.game)!;
+  const act = useGame((s) => s.act);
+  const inside = useGame((s) => s.inside);
+  const busy = useGame((s) => !!s.homeTask);
+  const startHomeTask = useGame((s) => s.startHomeTask);
+  const hour = E.hourOfDay(g);
+
+  const levels: [Lack, number][] = [
+    ['energy', g.needs.energy], ['hunger', g.needs.hunger], ['hygiene', g.needs.hygiene], ['social', g.needs.social], ['health', g.health],
+  ];
+  const picks = levels
+    .filter(([, v]) => v < 60)
+    .sort((a, b) => a[1] - b[1])
+    .slice(0, 3)
+    .map(([lack, v]) => {
+      const ids = candidates(lack, hour);
+      const id = ids.find((x) => E.canDoAction(g, x).ok);
+      return { lack, v, id, reason: id ? null : E.canDoAction(g, ids[0]).reason };
+    });
+  if (!picks.length || busy) return null;
+
+  const HOME = new Set(['sleep', 'nap', 'cook', 'shower', 'relax', 'call']);
+  const go = (id: string) => (inside && HOME.has(id) ? startHomeTask(id) : act(id));
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-1.5">
+      <span className="lux-shadow mr-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-gold-light">Needs attention</span>
+      {picks.map(({ lack, v, id, reason }) => {
+        const a = id ? ACTIONS.find((x) => x.id === id)! : null;
+        const crit = v < CRITICAL;
+        const cost = a ? E.actionCost(g, a) : 0;
+        return (
+          <button key={lack} disabled={!a} onClick={() => a && go(a.id)}
+            title={a ? a.desc : reason ?? ''}
+            className={`lux-pill flex items-center gap-2 py-1 pl-1.5 pr-3 text-left transition hover:scale-105 hover:!border-gold disabled:cursor-not-allowed disabled:opacity-60 ${crit ? '!border-ruby animate-pulse' : ''}`}>
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-gold/15 text-sm">{LACK_META[lack].icon}</span>
+            <span className="leading-tight">
+              <span className={`block text-[10px] ${crit ? 'font-semibold text-ruby' : 'text-cream-dim'}`}>{LACK_META[lack].label} {Math.round(v)}</span>
+              <span className="block font-serif text-[13px] font-bold text-cream">
+                {a ? a.label : 'Nothing available'}
+                {a && <span className="ml-1.5 font-sans text-[10px] font-normal text-gold-light">{a.hours}h{cost ? ` · ${money(cost)}` : ''}</span>}
+              </span>
+            </span>
+          </button>
         );
       })}
     </div>
