@@ -23,6 +23,7 @@ The game plays out in a low-poly 3D city (three.js via React Three Fiber):
 - Drag to orbit, scroll to zoom.
 - The Luxe look: gold-and-serif overlays, champagne road lines, black-and-gold Luxe cabs, a physical sky with real sunsets, reflective sea, glossy wet roads at night, street-lamp light pools, a skyline and hills across the bay, beach and marina, traffic with headlights, and people on the pavements.
 - A bigger city with 18 places to go, including Whitmore Business School (classes count toward promotion), Iron & Oak Gym (builds health), St. Regis Clinic, Golden Palace Casino (slots, blackjack, high-roller room), Crown Arena (matches, concerts, VIP box), Azure Beach Club (cabanas, yacht parties), Sky Harbour Terminal (getaways and the Monaco Grand Prix, 60% cheaper with your own jet), and dedicated shops: Prestige Motors, Skyline Realty and Aurelia Jewellers.
+- Go inside your home: click Home → Go inside. The room matches what you own (rented studio up to penthouse, villa or island), and you click the bed, kitchen, shower, sofa & TV, desk phone or hot tub to act it out while the clock runs forward. A private chef cooks in your kitchen once hired.
 - Own a car and you drive it (instead of walking); the camera chases you while you travel.
 - On screen: a gold cash card with +/− notes, a north-up city map (click a venue to go there, ◎ Me to find yourself) with health and need bars, and the venue name in serif when you arrive.
 - ☰ → Graphics: Low (older PCs), High (default), Ultra (real-time sea reflections).

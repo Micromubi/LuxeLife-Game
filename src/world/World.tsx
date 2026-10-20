@@ -13,6 +13,7 @@ import { Bank, BoutiqueStore, BusinessBuilding, Club, EmptyLot, Office, Plaza, R
 import { Boats, Car, Greenery, Ground, Island, Jet, Pedestrians, Runway, Skyline, StreetLamps, Traffic } from './Props';
 import { Airport, Arena, BeachClub, Casino, Clinic, FillerTower, Gym, Jeweller, Motors, Park, Realty, School } from './Venues';
 import Avatar from './Avatar';
+import Interior from './Interior';
 
 const RES_ORDER = ['villa', 'penthouse', 'apartment', 'flat'];
 const CAR_ORDER = ['hypercar', 'sportscar', 'suv', 'sedan'];
@@ -21,6 +22,7 @@ const CAR_ORDER = ['hypercar', 'sportscar', 'suv', 'sedan'];
 export default function World() {
   const gfx = useGame((s) => s.settings.gfx ?? 'high');
   const low = gfx === 'low';
+  const inside = useGame((s) => s.inside);
   return (
     <Canvas
       shadows={low ? 'basic' : 'soft'}
@@ -38,17 +40,23 @@ export default function World() {
           <Lightformer form="ring" intensity={3} color="#ffffff" position={[0, 18, 0]} rotation-x={Math.PI / 2} scale={8} />
           <mesh scale={60}><sphereGeometry args={[1, 24, 12]} /><meshBasicMaterial color="#6b7f93" side={THREE.BackSide} /></mesh>
         </Environment>
-        <CameraRig />
-        <Ground reflect={gfx === 'ultra'} />
-        <StreetLamps />
-        <Greenery />
-        <Boats />
-        <Skyline />
-        <City />
-        <Traffic />
-        {!low && <Pedestrians />}
-        <Avatar />
-        <Burst />
+        {inside ? (
+          <Interior />
+        ) : (
+          <>
+            <CameraRig />
+            <Ground reflect={gfx === 'ultra'} />
+            <StreetLamps />
+            <Greenery />
+            <Boats />
+            <Skyline />
+            <City />
+            <Traffic />
+            {!low && <Pedestrians />}
+            <Avatar />
+            <Burst />
+          </>
+        )}
         {low ? (
           <EffectComposer multisampling={0}>
             <Bloom mipmapBlur luminanceThreshold={0.9} intensity={0.8} />
@@ -172,6 +180,16 @@ function CameraRig() {
   const wasMoving = useRef(false);
   const { camera } = useThree();
   const tmp = useMemo(() => new THREE.Vector3(), []);
+
+  // Coming back out to the city (or starting the game): frame the player.
+  useEffect(() => {
+    const c = controls.current;
+    if (!c) return;
+    const { x, z } = world.avatar;
+    c.target.set(x, 0, z - 4);
+    camera.position.set(x + 12, 30, z + 28);
+    c.update();
+  }, [camera]);
 
   useEffect(() => {
     if (!focus || !controls.current) return;

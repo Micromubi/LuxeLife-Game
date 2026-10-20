@@ -5,11 +5,16 @@ import { money } from '../lib/format';
 import type { NeedKey } from '../game/types';
 
 const GROUPS = ACTION_GROUPS;
+export const HOME_ACTIONS = new Set(['sleep', 'nap', 'cook', 'shower', 'relax', 'call']);
 const SHORT: Record<NeedKey, string> = { energy: 'Energy', hunger: 'Fullness', social: 'Social', hygiene: 'Hygiene' };
 
 export default function ActionsPanel({ groups, onShowAll }: { groups?: ActionGroup[]; onShowAll?: () => void }) {
   const g = useGame((s) => s.game)!;
   const act = useGame((s) => s.act);
+  const inside = useGame((s) => s.inside);
+  const startHomeTask = useGame((s) => s.startHomeTask);
+  // Indoors, home activities are acted out in the room rather than applied instantly.
+  const run = (id: string) => (inside && HOME_ACTIONS.has(id) ? startHomeTask(id) : act(id));
   const wage = E.hourlyWage(g) * 4 * E.productivity(g).mult * 0.9;
 
   return (
@@ -30,7 +35,7 @@ export default function ActionsPanel({ groups, onShowAll }: { groups?: ActionGro
                 <button
                   key={a.id}
                   disabled={!can.ok}
-                  onClick={() => act(a.id)}
+                  onClick={() => run(a.id)}
                   className="group flex items-center gap-3 rounded-xl border border-white/[0.07] bg-black/20 px-3.5 py-3 text-left transition hover:border-gold/40 hover:bg-gold/[0.05] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-white/[0.07] disabled:hover:bg-black/20"
                 >
                   <div className="min-w-0 flex-1">

@@ -4,7 +4,7 @@ import { useGameLoop } from '../hooks/useGameLoop';
 import { CRITICAL, SPEEDS, VIP_THRESHOLD } from '../game/config';
 import * as E from '../game/engine';
 import type { Tab } from '../world/layout';
-import { LocationBanner, MoneyHud, Radar } from './Hud';
+import { HomeTaskOverlay, LocationBanner, MoneyHud, Radar } from './Hud';
 import StatusColumn from './StatusColumn';
 import ActionsPanel from './ActionsPanel';
 import Shop from './Shop';
@@ -26,6 +26,9 @@ export default function Dashboard() {
   const drawer = useGame((s) => s.drawer);
   const openTab = useGame((s) => s.openTab);
   const closeDrawer = useGame((s) => s.closeDrawer);
+  const inside = useGame((s) => s.inside);
+  const enterHome = useGame((s) => s.enterHome);
+  const exitHome = useGame((s) => s.exitHome);
   const progress = useGameLoop();
   const [shimmer, setShimmer] = useState(0);
   const [statsOpen, setStatsOpen] = useState(() => {
@@ -78,7 +81,7 @@ export default function Dashboard() {
         </button>
         <SettingsMenu />
       </header>
-      {game.dayEvent && (
+      {game.dayEvent && !inside && (
         <div className="lux-pill pointer-events-none absolute left-1/2 top-3 z-20 hidden -translate-x-1/2 px-4 py-1 text-center font-serif text-xs italic text-gold-light lg:block">
           Today · {game.dayEvent}
         </div>
@@ -97,6 +100,12 @@ export default function Dashboard() {
         <Radar />
       </div>
       <LocationBanner />
+      {inside && (
+        <button onClick={exitHome} className="lux-pill absolute left-1/2 top-3 z-30 -translate-x-1/2 px-4 py-1.5 font-serif text-sm font-bold text-gold-light transition hover:!border-gold">
+          ← Back to the city
+        </button>
+      )}
+      <HomeTaskOverlay />
 
       {/* right: drawer */}
       <aside
@@ -111,6 +120,9 @@ export default function Dashboard() {
           </div>
           <button className="btn-ghost px-3" onClick={closeDrawer} aria-label="Close">✕</button>
         </div>
+        {!inside && (drawer.loc === 'home' || drawer.loc === 'island') && (
+          <button className="btn-gold mx-4 mb-3" onClick={enterHome}>🚪 Go inside</button>
+        )}
         <nav className="mx-4 mb-3 flex gap-1 overflow-x-auto rounded-xl border border-white/[0.06] bg-black/30 p-1">
           {TABS.map((t) => (
             <button key={t} onClick={() => openTab(t)}
@@ -131,7 +143,7 @@ export default function Dashboard() {
       {/* bottom dock */}
       {!drawer.open && (
         <div className="absolute bottom-4 left-[150px] right-3 z-20 flex flex-col items-center gap-2 sm:left-[230px]">
-          <p className="lux-shadow hidden font-serif text-xs italic text-cream-dim sm:block">Click a building or the map to go there · drag to look around · scroll to zoom</p>
+          <p className="lux-shadow hidden font-serif text-xs italic text-cream-dim sm:block">{inside ? 'Click the bed, kitchen, shower, sofa or desk to do something · drag to look around' : 'Click a building or the map to go there · drag to look around · scroll to zoom'}</p>
           <div className="flex gap-1.5 overflow-x-auto rounded-2xl border border-white/[0.08] bg-black/65 p-1.5 backdrop-blur">
             {TABS.map((t) => (
               <button key={t} onClick={() => openTab(t)} className="btn-ghost whitespace-nowrap border-transparent px-3 py-2 text-xs">{t}</button>

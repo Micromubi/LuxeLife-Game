@@ -208,6 +208,37 @@ function NeedBars() {
   );
 }
 
+// ───────────────────────── time passing at home ─────────────────────────
+
+const TASK_MS = 2800;
+const TASK_WORDS: Record<string, string> = {
+  sleep: 'Sleeping…', nap: 'Napping…', cook: 'Cooking…', shower: 'Showering…', relax: 'Unwinding…', call: 'On the phone…',
+};
+
+/** While an activity plays out indoors, the clock visibly runs forward, then the result lands. */
+export function HomeTaskOverlay() {
+  const task = useGame((s) => s.homeTask);
+  const finish = useGame((s) => s.finishHomeTask);
+  const doing = task?.phase === 'doing';
+  useEffect(() => {
+    if (!doing) return;
+    const t = setTimeout(finish, TASK_MS);
+    return () => clearTimeout(t);
+  }, [doing, finish]);
+  if (!task || !doing) return null;
+  return (
+    <div className="pointer-events-none absolute left-1/2 top-[18%] z-40 -translate-x-1/2 animate-rise">
+      <div className="lux-card min-w-[260px] px-6 py-4 text-center">
+        <div className="font-serif text-2xl font-bold italic text-cream">{TASK_WORDS[task.id] ?? task.label}</div>
+        <div className="mt-1 text-xs uppercase tracking-[0.3em] text-gold-light">{task.label} · {task.hours}h pass</div>
+        <div className="mt-3 h-1 overflow-hidden rounded-full bg-black/50">
+          <div className="h-full rounded-full bg-gradient-to-r from-gold-dark via-gold to-gold-light" style={{ animation: `taskfill ${TASK_MS}ms linear forwards` }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ───────────────────────── place title ─────────────────────────
 
 /** The venue's name, set in serif between gold rules, when you go somewhere. */

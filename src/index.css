@@ -64,6 +64,8 @@ body {
   box-shadow: 0 6px 18px -8px rgba(0,0,0,0.9);
 }
 
+@keyframes taskfill { from { width: 0 } to { width: 100% } }
+
 .vip .panel {
   border-color: rgba(212,175,55,0.35);
   background: linear-gradient(160deg, rgba(52,44,26,0.9), rgba(24,22,18,0.95));
