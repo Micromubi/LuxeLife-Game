@@ -250,7 +250,7 @@ export function QuickActions() {
     });
   if (!picks.length || busy) return null;
 
-  const HOME = new Set(['sleep', 'nap', 'cook', 'shower', 'relax', 'call']);
+  const HOME = new Set(['sleep', 'nap', 'cook', 'shower', 'relax', 'call', 'content']);
   const go = (id: string) => (inside && HOME.has(id) ? startHomeTask(id) : act(id));
 
   return (
@@ -283,7 +283,7 @@ export function QuickActions() {
 
 const TASK_MS = 2800;
 const TASK_WORDS: Record<string, string> = {
-  sleep: 'Sleeping…', nap: 'Napping…', cook: 'Cooking…', shower: 'Showering…', relax: 'Unwinding…', call: 'On the phone…',
+  sleep: 'Sleeping…', nap: 'Napping…', cook: 'Cooking…', shower: 'Showering…', relax: 'Unwinding…', call: 'On the phone…', content: 'Filming content…',
 };
 
 /** While an activity plays out indoors, the clock visibly runs forward, then the result lands. */

@@ -1,6 +1,6 @@
 import {
   ACTIONS, BASE_DECAY, BROKE_TICKS, BUSINESS_TAX, CAREERS, CATALOG, CRITICAL, DEFAULT_TICK_MS, FINANCE, FIRE_SALE, FUNDS,
-  LIQUIDATION, MAX_LEDGER, PRESTIGE_TIERS, SLEEP_DECAY, SLEEP_GAIN, START_HOUR, START_PROFILES, STUDIO_RENT, WAGE_TAX, itemById,
+  LIQUIDATION, LOTTERY, MAX_LEDGER, PRESTIGE_TIERS, SLEEP_DECAY, SLEEP_GAIN, START_HOUR, START_PROFILES, STOCKS, STOCK_HISTORY, STUDIO_RENT, TRADE_FEE, WAGE_TAX, itemById,
   type FundId,
 } from './config';
 import type { GameState, Loan, NeedKey, Needs, Notice, OwnedAsset, StartType, TxnCategory } from './types';
@@ -43,6 +43,10 @@ export function newGame(name: string, startType: StartType): GameState {
     dayEvent: null,
     week: { bizProfit: 0 },
     investments: { index: 0, crypto: 0 },
+    stocks: initStocks(),
+    holdings: {},
+    deals: [],
+    followers: 0,
     stats: { lifetimeEarnings: 0, peakNetWorth: p.cash - p.loan, daysSurvived: 0 },
     lastTickAt: Date.now(),
   };
@@ -51,6 +55,7 @@ export function newGame(name: string, startType: StartType): GameState {
     ledger(s, p.loan, 'LOAN', 'Starter microloan disbursed');
   }
   ledger(s, startType === 'NEPO' ? p.cash : p.cash - p.loan, 'INCOME', startType === 'NEPO' ? 'Trust fund distribution' : 'Savings');
+  refreshDeals(s);
   return s;
 }
 
@@ -136,7 +141,7 @@ export function totalDebt(s: GameState) {
 }
 export function netWorth(s: GameState) {
   const inv = (s.investments?.index ?? 0) + (s.investments?.crypto ?? 0);
-  return s.cash + inv + s.assets.reduce((sum, a) => sum + a.currentValue, 0) - totalDebt(s);
+  return s.cash + inv + portfolioValue(s) + s.assets.reduce((sum, a) => sum + a.currentValue, 0) - totalDebt(s);
 }
 
 export function loanTerms(s: GameState) {
@@ -287,6 +292,7 @@ export function simulateHour(s: GameState, out: Out, opts: HourMode = {}) {
     s.cash += rev;
   }
 
+  tickStocks(s, out);
   if (s.hour % 24 === 0) endOfDay(s, out);
 
   // Bankruptcy check
@@ -301,6 +307,7 @@ function endOfDay(s: GameState, out: Out) {
   // Business results
   let bizRev = 0;
   let bizCost = 0;
+  staffTheft(s, mods.businesses, out);
   for (const b of mods.businesses) {
     bizRev += b.revenueToday ?? 0;
     bizCost += itemById(b.itemId)?.upkeepPerDay ?? 0;
@@ -378,6 +385,8 @@ function endOfDay(s: GameState, out: Out) {
   s.marketMood = 0.85 + Math.random() * 0.3;
   s.dayEvent = null;
   if (Math.random() < 0.35) randomEvent(s, out);
+  bigEvents(s, out);
+  refreshDeals(s, true);
 
   // Net-worth watch → liquidation after 3 consecutive negative days
   const nw = netWorth(s);
@@ -432,6 +441,8 @@ export function liquidate(s: GameState, out: Out, reason: string) {
   const sold: string[] = [];
   for (const a of s.assets) { proceeds += a.currentValue * LIQUIDATION; sold.push(a.name); }
   if (s.investments) { proceeds += s.investments.index + s.investments.crypto; s.investments = { index: 0, crypto: 0 }; }
+  proceeds += portfolioValue(s) * LIQUIDATION;
+  s.holdings = {};
   s.assets = [];
   const debt = totalDebt(s);
   const pot = s.cash + proceeds;
@@ -472,6 +483,7 @@ export function canDoAction(s: GameState, id: string): Result {
   if (actionCost(s, a) > s.cash) return { ok: false, reason: 'Not enough cash' };
   if (a.special === 'manage' && !s.assets.some((x) => x.category === 'BUSINESS')) return { ok: false, reason: 'You own no ventures' };
   if (a.special === 'poker' && !tags(s).has('poker')) return { ok: false, reason: 'Needs a Gold Chronograph' };
+  if (a.hustle === 'rideshare' && !s.assets.some((x) => x.category === 'VEHICLE')) return { ok: false, reason: 'Needs a car' };
   return { ok: true };
 }
 
@@ -532,6 +544,9 @@ export function doAction(s: GameState, id: string, out: Out): Result {
     tryPromote(s, out);
   }
 
+  if (a.hustle) hustlePay(s, a.hustle, out);
+  if (a.lottery) drawLottery(s, out);
+
   if (a.gamble) {
     if (Math.random() < a.gamble.odds) {
       const pot = Math.round(cost * a.gamble.payout);
@@ -546,7 +561,7 @@ export function doAction(s: GameState, id: string, out: Out): Result {
       s.reputation += 20;
       out.push({ kind: 'gold', text: `You took the table. ${money(pot)} and the room's respect.` });
     } else out.push({ kind: 'bad', text: 'You lost the buy-in. They smiled politely.' });
-  } else if ((cost > 0 || a.rep) && !a.health && !a.study) out.push({ kind: 'info', text: `${a.label} — done.` });
+  } else if ((cost > 0 || a.rep) && !a.health && !a.study && !a.lottery) out.push({ kind: 'info', text: `${a.label} — done.` });
 
   checkBroke(s, out);
   return { ok: true };
@@ -708,7 +723,14 @@ export function hydrate(raw: unknown): GameState | null {
   if (!raw || typeof raw !== 'object') return null;
   const s = raw as GameState;
   if (typeof s.cash !== 'number' || !s.needs || !Array.isArray(s.assets)) return null;
-  return { ...newGame(s.name ?? 'Anonymous', s.startType ?? 'LAPO'), ...s, version: SAVE_VERSION };
+  const base = newGame(s.name ?? 'Anonymous', s.startType ?? 'LAPO');
+  const g = { ...base, ...s, version: SAVE_VERSION };
+  // Saves from before the markets update: add any missing companies.
+  g.stocks = { ...base.stocks, ...(s.stocks ?? {}) };
+  g.holdings ??= {};
+  g.deals ??= base.deals;
+  g.followers ??= 0;
+  return g;
 }
 
 export const catalogByCategory = () => {
@@ -716,3 +738,232 @@ export const catalogByCategory = () => {
   CATALOG.forEach((c) => (map[c.category] ||= []).push(c));
   return map;
 };
+
+// ─────────────────────────── stock market ───────────────────────────
+
+/** Fresh market with a few days of made-up history so the charts aren't empty. */
+function initStocks() {
+  const out: GameState['stocks'] = {};
+  for (const c of STOCKS) {
+    let p = c.price;
+    const history: number[] = [];
+    for (let i = 0; i < STOCK_HISTORY; i++) { p = Math.max(0.5, p * (1 + c.drift + gauss() * c.vol)); history.push(round2(p)); }
+    out[c.id] = { price: round2(p), history };
+  }
+  return out;
+}
+
+export function portfolioValue(s: GameState) {
+  let v = 0;
+  for (const [id, h] of Object.entries(s.holdings ?? {})) v += h.shares * (s.stocks?.[id]?.price ?? 0);
+  return v;
+}
+
+/** Hourly price moves, plus the odd news shock (announced if you hold the stock). */
+function tickStocks(s: GameState, out: Out) {
+  s.stocks ||= initStocks();
+  for (const c of STOCKS) {
+    const st = (s.stocks[c.id] ||= { price: c.price, history: [] });
+    let r = c.drift + gauss() * c.vol;
+    if (Math.random() < 0.012) {
+      const shock = (Math.random() < 0.5 ? -1 : 1) * (0.08 + Math.random() * 0.22);
+      r += shock;
+      if (s.holdings?.[c.id]?.shares) {
+        out.push({ kind: shock > 0 ? 'good' : 'bad', text: `${c.name} (${c.id}) ${shock > 0 ? 'soared' : 'plunged'} ${Math.abs(shock * 100).toFixed(0)}% on breaking news.` });
+      }
+    }
+    st.price = round2(Math.max(0.5, st.price * (1 + r)));
+    st.history.push(st.price);
+    if (st.history.length > STOCK_HISTORY) st.history.splice(0, st.history.length - STOCK_HISTORY);
+  }
+}
+
+export function buyStock(s: GameState, id: string, shares: number, out: Out): Result {
+  const c = STOCKS.find((x) => x.id === id);
+  const st = s.stocks?.[id];
+  shares = Math.floor(shares);
+  if (!c || !st) return { ok: false, reason: 'Unknown company' };
+  if (shares <= 0) return { ok: false, reason: 'Enter a number of shares' };
+  const cost = shares * st.price;
+  const fee = Math.max(1, cost * TRADE_FEE);
+  if (cost + fee > s.cash) return { ok: false, reason: 'Not enough cash' };
+  s.cash -= cost + fee;
+  s.holdings ||= {};
+  const h = (s.holdings[id] ||= { shares: 0, cost: 0 });
+  h.shares += shares; h.cost += cost + fee;
+  ledger(s, -(cost + fee), 'PURCHASE', `Bought ${shares} ${id} @ ${money(st.price)}`);
+  out.push({ kind: 'info', text: `Bought ${shares.toLocaleString()} ${c.name} shares for ${money(cost + fee)}.` });
+  return { ok: true };
+}
+
+export function sellStock(s: GameState, id: string, shares: number, out: Out): Result {
+  const h = s.holdings?.[id];
+  const st = s.stocks?.[id];
+  shares = Math.min(Math.floor(shares), h?.shares ?? 0);
+  if (!h || !st || shares <= 0) return { ok: false, reason: 'No shares to sell' };
+  const gross = shares * st.price;
+  const fee = Math.max(1, gross * TRADE_FEE);
+  const basis = (h.cost / h.shares) * shares;
+  h.cost -= basis; h.shares -= shares;
+  if (h.shares <= 0) delete s.holdings[id];
+  s.cash += gross - fee;
+  const pnl = gross - fee - basis;
+  ledger(s, gross - fee, 'SALE', `Sold ${shares} ${id} @ ${money(st.price)}`);
+  out.push({ kind: pnl >= 0 ? 'good' : 'bad', text: `Sold ${shares.toLocaleString()} ${id}: ${pnl >= 0 ? 'profit' : 'loss'} of ${money(Math.abs(pnl))}.` });
+  resolveBroke(s);
+  return { ok: true };
+}
+
+// ─────────────────────────── flipping ───────────────────────────
+
+const FLIPPABLE = ['sedan', 'suv', 'sportscar', 'hypercar', 'flat', 'apartment', 'penthouse', 'villa'];
+/** Restoring a fixer-upper costs this share of the item's list price. */
+export const RESTORE_COST = 0.15;
+
+/** New listings each morning: the two oldest rotate out, and anything past its 48h listing expires. */
+function refreshDeals(s: GameState, rotate = false) {
+  s.deals = (s.deals ?? []).filter((d) => d.expiresHour > s.hour);
+  if (rotate) s.deals = s.deals.slice(2);
+  // Bias listings toward what you can roughly afford, with the odd stretch.
+  const budget = Math.max(5_000, netWorth(s) * 1.5);
+  while (s.deals.length < 4) {
+    const pool = FLIPPABLE.filter((id) => (itemById(id)?.price ?? 0) <= budget || Math.random() < 0.15);
+    const id = pool[Math.floor(Math.random() * pool.length)] ?? 'sedan';
+    const it = itemById(id)!;
+    const fixer = Math.random() < 0.6;
+    const share = fixer ? 0.42 + Math.random() * 0.2 : 0.62 + Math.random() * 0.2;
+    s.deals.push({ id: uid(), itemId: id, price: Math.round(it.price * share), fixer, expiresHour: s.hour + 48 });
+  }
+}
+
+export function buyDeal(s: GameState, dealId: string, out: Out): Result {
+  const d = s.deals?.find((x) => x.id === dealId);
+  if (!d) return { ok: false, reason: 'That listing is gone' };
+  const it = itemById(d.itemId)!;
+  if (d.price > s.cash) return { ok: false, reason: 'Not enough cash' };
+  s.cash -= d.price;
+  s.deals = s.deals.filter((x) => x !== d);
+  s.assets.push({
+    uid: uid(), itemId: it.id, name: d.fixer ? `${it.name} (fixer-upper)` : it.name, category: it.category as OwnedAsset['category'],
+    purchasePrice: d.price, currentValue: d.fixer ? Math.round(d.price * 0.9) : Math.round(it.price * it.resale), boughtAtHour: s.hour, fixer: d.fixer,
+  });
+  ledger(s, -d.price, 'PURCHASE', `Bought ${it.name} on the deals board`);
+  out.push({ kind: 'gold', text: d.fixer ? `Got a ${it.name} fixer-upper for ${money(d.price)}. Restore it to unlock its value.` : `Snapped up a ${it.name} for ${money(d.price)}, under market.` });
+  return { ok: true };
+}
+
+export function restoreAsset(s: GameState, assetUid: string, out: Out): Result {
+  const a = s.assets.find((x) => x.uid === assetUid);
+  if (!a?.fixer) return { ok: false, reason: 'Nothing to restore' };
+  const it = itemById(a.itemId)!;
+  const cost = Math.round(it.price * RESTORE_COST);
+  if (cost > s.cash) return { ok: false, reason: `Need ${money(cost)}` };
+  s.cash -= cost;
+  a.fixer = false;
+  a.name = it.name;
+  a.currentValue = Math.round(it.price * Math.min(1, it.resale + 0.04));
+  ledger(s, -cost, 'EXPENSE', `Restored ${it.name}`);
+  out.push({ kind: 'good', text: `${it.name} restored. Now worth ${money(a.currentValue)}.` });
+  return { ok: true };
+}
+
+// ─────────────────────────── side jobs & lottery ───────────────────────────
+
+const RIDE_PAY: Record<string, number> = { sedan: 110, suv: 170, sportscar: 280, hypercar: 520, jet: 520 };
+
+function hustlePay(s: GameState, kind: NonNullable<(typeof ACTIONS)[number]['hustle']>, out: Out) {
+  let pay = 0;
+  if (kind === 'delivery') pay = 70 + Math.random() * 50;
+  if (kind === 'freelance') pay = 150 + s.careerLevel * 60 + Math.random() * 60;
+  if (kind === 'rideshare') {
+    const car = ['hypercar', 'sportscar', 'suv', 'sedan'].find((c) => s.assets.some((a) => a.itemId === c)) ?? 'sedan';
+    pay = RIDE_PAY[car] * (0.8 + Math.random() * 0.4);
+  }
+  if (kind === 'content') {
+    const gain = Math.round(30 + prestige(s) / 8 + s.followers * 0.04 * Math.random());
+    s.followers += gain;
+    pay = 10 + s.followers * 0.03 * (0.5 + Math.random());
+    if (Math.random() < 0.06) {
+      const boost = Math.round(s.followers * 0.6);
+      s.followers += boost;
+      pay *= 5;
+      s.reputation += 10;
+      out.push({ kind: 'gold', text: `Your post went viral! +${boost.toLocaleString()} followers.` });
+    } else out.push({ kind: 'info', text: `+${gain} followers (${s.followers.toLocaleString()} total).` });
+  }
+  pay = Math.round(pay);
+  s.cash += pay;
+  s.stats.lifetimeEarnings += pay;
+  ledger(s, pay, 'INCOME', { delivery: 'Delivery tips & fees', rideshare: 'Rideshare fares', freelance: 'Freelance invoice', content: 'Creator payout' }[kind]);
+  out.push({ kind: 'good', text: `Side hustle paid ${money(pay)}.` });
+}
+
+function drawLottery(s: GameState, out: Out) {
+  let roll = Math.random();
+  for (const [odds, prize] of LOTTERY) {
+    if (roll < odds) {
+      s.cash += prize;
+      ledger(s, prize, 'INCOME', 'Lottery win');
+      out.push({ kind: prize >= 25_000 ? 'gold' : 'good', text: prize >= 1_000_000 ? `JACKPOT! You won ${money(prize)}!` : `Lottery: you won ${money(prize)}.` });
+      return;
+    }
+    roll -= odds;
+  }
+  out.push({ kind: 'info', text: 'Lottery: no luck this time.' });
+}
+
+// ─────────────────────────── big events ───────────────────────────
+
+/** Rare life-changing days, checked every midnight. Bigger fortunes attract bigger trouble. */
+function bigEvents(s: GameState, out: Out) {
+  const nw = netWorth(s);
+  const p = prestige(s);
+  const roll = () => Math.random();
+
+  if (nw > 1_000_000 && roll() < 0.03) {
+    const owed = Math.round(nw * (0.02 + roll() * 0.04));
+    s.cash -= owed;
+    ledger(s, -owed, 'TAX', 'Tax audit settlement');
+    out.push({ kind: 'bad', text: `TAX AUDIT. The revenue service found "irregularities". Settlement: ${money(owed)}.` });
+    return;
+  }
+  if (nw > 200_000 && roll() < 0.025) {
+    const award = Math.round(nw * (0.02 + roll() * 0.04));
+    s.cash -= award;
+    ledger(s, -award, 'EXPENSE', 'Lawsuit settlement');
+    out.push({ kind: 'bad', text: `LAWSUIT. A former associate sued you and won ${money(award)}.` });
+    return;
+  }
+  if (s.cash > 10_000 && roll() < 0.03) {
+    const guarded = s.assets.some((a) => a.itemId === 'concierge');
+    const lost = Math.round(Math.min(250_000, s.cash * (0.05 + roll() * 0.1) * (guarded ? 0.4 : 1)));
+    s.cash -= lost;
+    ledger(s, -lost, 'EXPENSE', 'Robbery');
+    out.push({ kind: 'bad', text: `ROBBERY. Thieves got away with ${money(lost)}.${guarded ? ' Your concierge limited the damage.' : ''}` });
+    return;
+  }
+  if (p > 150 && roll() < 0.025) {
+    const lost = Math.round(s.reputation * 0.35);
+    s.reputation -= lost;
+    s.assets.filter((a) => a.category === 'BUSINESS').forEach((b) => (b.morale = clamp((b.morale ?? 70) - 25)));
+    out.push({ kind: 'bad', text: `SCANDAL. The tabloids ran a story. −${lost} reputation, and your staff are rattled.` });
+    return;
+  }
+  if (roll() < 0.008) {
+    const amt = Math.round(20_000 + roll() * 230_000);
+    s.cash += amt;
+    ledger(s, amt, 'INCOME', 'Inheritance');
+    out.push({ kind: 'gold', text: `INHERITANCE. A distant relative left you ${money(amt)}.` });
+  }
+}
+
+/** Unhappy staff skim the till. Keep morale up with Manage Ventures. */
+function staffTheft(s: GameState, businesses: OwnedAsset[], out: Out) {
+  for (const b of businesses) {
+    if ((b.morale ?? 70) >= 45 || !(b.revenueToday ?? 0) || Math.random() > 0.2) continue;
+    const stolen = Math.round((b.revenueToday ?? 0) * (0.15 + Math.random() * 0.2));
+    b.revenueToday = (b.revenueToday ?? 0) - stolen;
+    s.cash -= stolen;
+    out.push({ kind: 'bad', text: `Staff at your ${b.name} skimmed ${money(stolen)} from the till. Low morale invites theft.` });
+  }
+}

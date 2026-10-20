@@ -52,7 +52,15 @@ export interface OwnedAsset {
   boughtAtHour: number;
   morale?: number;
   revenueToday?: number;
+  /** Bought as a fixer-upper: worth little until restored. */
+  fixer?: boolean;
 }
+
+export interface StockState { price: number; history: number[] }
+/** Shares held and their total cost basis. */
+export interface Holding { shares: number; cost: number }
+/** A discounted car or property on the deals board. */
+export interface Deal { id: string; itemId: string; price: number; fixer: boolean; expiresHour: number }
 
 export interface Loan {
   id: string;
@@ -118,6 +126,11 @@ export interface GameState {
   dayEvent: string | null;
   week: { bizProfit: number };
   investments: { index: number; crypto: number };
+  stocks: Record<string, StockState>;
+  holdings: Record<string, Holding>;
+  deals: Deal[];
+  /** Social-media audience for content creation. */
+  followers: number;
   stats: { lifetimeEarnings: number; peakNetWorth: number; daysSurvived: number };
   lastTickAt: number;
 }

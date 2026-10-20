@@ -133,8 +133,8 @@ export const CATEGORY_LABEL: Record<string, string> = {
   BUSINESS: 'Ventures',
 };
 
-export type ActionGroup = 'Work' | 'Study' | 'Dine' | 'Rest' | 'Care' | 'Fitness' | 'Health' | 'Society' | 'Leisure' | 'Events' | 'Gamble' | 'Travel';
-export const ACTION_GROUPS: ActionGroup[] = ['Work', 'Study', 'Dine', 'Rest', 'Care', 'Fitness', 'Health', 'Society', 'Leisure', 'Events', 'Gamble', 'Travel'];
+export type ActionGroup = 'Work' | 'Hustle' | 'Study' | 'Dine' | 'Rest' | 'Care' | 'Fitness' | 'Health' | 'Society' | 'Leisure' | 'Events' | 'Gamble' | 'Travel';
+export const ACTION_GROUPS: ActionGroup[] = ['Work', 'Hustle', 'Study', 'Dine', 'Rest', 'Care', 'Fitness', 'Health', 'Society', 'Leisure', 'Events', 'Gamble', 'Travel'];
 export interface ActionDef {
   id: string;
   label: string;
@@ -161,6 +161,10 @@ export interface ActionDef {
   study?: number;
   /** Trips: owning the Private Jet cuts the cost by this fraction. */
   jetDiscount?: number;
+  /** Side jobs that pay cash without a career. */
+  hustle?: 'delivery' | 'rideshare' | 'freelance' | 'content';
+  /** A lottery ticket. */
+  lottery?: boolean;
   desc: string;
 }
 
@@ -188,6 +192,11 @@ export const ACTIONS: ActionDef[] = [
   { id: 'gala', label: 'Charity Gala', group: 'Society', hours: 4, cost: 25_000, effects: { social: 40 }, rep: 70, tokens: 2, minPrestige: 300, open: [19, 23], desc: '4h. +2 networking tokens, big reputation.' },
   { id: 'poker', label: 'Billionaires\' Poker', group: 'Society', hours: 5, cost: 50_000, effects: { social: 25 }, rep: 10, special: 'poker', minPrestige: 400, open: [20, 3], desc: '5h. $50k buy-in. Needs a Gold Chronograph.' },
 
+  { id: 'delivery', label: 'Food Delivery Run', group: 'Hustle', hours: 2, cost: 0, effects: { energy: -10, hygiene: -8 }, hustle: 'delivery', minEnergy: 20, open: [7, 24], desc: '2h on a bike. ~$70–120 cash, no career needed.' },
+  { id: 'rideshare', label: 'Rideshare Driving', group: 'Hustle', hours: 2, cost: 0, effects: { energy: -8, social: 6 }, hustle: 'rideshare', minEnergy: 20, desc: '2h. Needs a car; the nicer the car, the better the fares.' },
+  { id: 'freelance', label: 'Freelance Gig', group: 'Hustle', hours: 2, cost: 0, effects: { energy: -14 }, hustle: 'freelance', minEnergy: 30, open: [8, 23], desc: '2h of consulting. Pays more as your career grows.' },
+  { id: 'content', label: 'Create Content', group: 'Hustle', hours: 2, cost: 0, effects: { energy: -6, social: 5 }, hustle: 'content', minEnergy: 15, desc: '2h. Grow followers; pay scales with your audience. Posts can go viral.' },
+
   { id: 'course', label: 'Evening Class', group: 'Study', hours: 3, cost: 350, effects: { energy: -6, social: 6 }, study: 1, minEnergy: 20, open: [17, 22], desc: '3h. Counts as 1 shift toward your next promotion.' },
   { id: 'mba', label: 'Executive MBA Module', group: 'Study', hours: 6, cost: 4_000, effects: { energy: -12, social: 12 }, study: 3, rep: 4, minEnergy: 35, minPrestige: 60, open: [9, 13], desc: '6h. Counts as 3 shifts. Great people in the room.' },
 
@@ -206,6 +215,7 @@ export const ACTIONS: ActionDef[] = [
   { id: 'concert', label: 'Stadium Concert', group: 'Events', hours: 4, cost: 400, effects: { social: 40, hygiene: -12, energy: -8 }, rep: 3, open: [19, 23], desc: '4h. Front-row energy.' },
   { id: 'vipbox', label: 'VIP Box', group: 'Events', hours: 3, cost: 9_000, effects: { social: 40, hunger: 25 }, rep: 25, tokens: 1, minPrestige: 180, open: [16, 22], desc: '3h. +1 networking token. Deals over canapés.' },
 
+  { id: 'lottery', label: 'Lottery Ticket', group: 'Gamble', hours: 0, cost: 20, effects: {}, lottery: true, desc: 'Instant. Jackpot $2.5M at 1 in 250,000. Smaller prizes more often.' },
   { id: 'slots', label: 'Slot Machines', group: 'Gamble', hours: 1, cost: 100, effects: { social: 5 }, gamble: { odds: 0.4, payout: 2.3 }, desc: '1h. $100 stake. 40% chance to win $230.' },
   { id: 'blackjack', label: 'Blackjack Table', group: 'Gamble', hours: 2, cost: 2_000, effects: { social: 12 }, gamble: { odds: 0.47, payout: 2 }, minPrestige: 30, open: [18, 6], desc: '2h. $2,000 stake. 47% to double it.' },
   { id: 'highroller', label: 'High Roller Room', group: 'Gamble', hours: 3, cost: 100_000, effects: { social: 20 }, gamble: { odds: 0.46, payout: 2.1 }, rep: 15, minPrestige: 300, open: [20, 6], desc: '3h. $100k stake. 46% to win $210k.' },
@@ -227,5 +237,22 @@ export const FUNDS = {
   crypto: { name: 'Crypto', mean: 0.0025, vol: 0.07, fee: 0.01, blurb: 'Wild swings. 1% fee to cash out.' },
 } as const;
 export type FundId = keyof typeof FUNDS;
+
+/** Listed companies. Prices move every game hour: drift + noise, with occasional news jumps. */
+export const STOCKS = [
+  { id: 'LUXE', name: 'Luxe Holdings', sector: 'Luxury goods', price: 120, drift: 0.0004, vol: 0.012 },
+  { id: 'SVBK', name: 'Sterling & Vane', sector: 'Banking', price: 88, drift: 0.0003, vol: 0.009 },
+  { id: 'NOVA', name: 'Nova AI', sector: 'Tech', price: 210, drift: 0.0008, vol: 0.028 },
+  { id: 'AURM', name: 'Aurum Mining', sector: 'Gold', price: 45, drift: 0.0002, vol: 0.016 },
+  { id: 'SKYH', name: 'Sky Harbour Air', sector: 'Travel', price: 32, drift: 0.0003, vol: 0.02 },
+  { id: 'PTRD', name: 'Petro Delta', sector: 'Energy', price: 68, drift: 0.0002, vol: 0.015 },
+  { id: 'SKRE', name: 'Skyline REIT', sector: 'Property', price: 54, drift: 0.0003, vol: 0.007 },
+  { id: 'MOON', name: 'Moonshot Meme Co', sector: 'Speculative', price: 4, drift: 0, vol: 0.07 },
+];
+export const STOCK_HISTORY = 96;
+export const TRADE_FEE = 0.001;
+
+/** Lottery prize table: [odds, prize]. Expected value is a little under the $20 ticket. */
+export const LOTTERY: [number, number][] = [[1 / 250_000, 2_500_000], [1 / 5_000, 25_000], [1 / 100, 200], [1 / 12, 20]];
 
 export const itemById = (id: string) => CATALOG.find((c) => c.id === id);

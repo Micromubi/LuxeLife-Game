@@ -52,7 +52,7 @@ function spotsFor(t: Tier): Spot[] {
       pose: 'stand', body: [6.5, 0.12, -4.5], bodyRot: [0, 0, 0] },
     { key: 'sofa', icon: '🛋️', label: 'Sofa & TV', actions: ['relax'], label3d: [4.2, 2.3, 2.6], stand: [5.6, 1], standYaw: 0,
       pose: 'sit', body: [4.15, 0.62 - HIP, 2.6], bodyRot: [0, Math.PI / 2, 0] },
-    { key: 'desk', icon: '📞', label: 'Desk & phone', actions: ['call'], label3d: [-7, 2.4, 3.6], stand: [-5, 3.6], standYaw: -Math.PI / 2,
+    { key: 'desk', icon: '📞', label: 'Desk & phone', actions: ['call', 'content'], label3d: [-7, 2.4, 3.6], stand: [-5, 3.6], standYaw: -Math.PI / 2,
       pose: 'phone', body: [-6.1, 0.55 - HIP, 3.6], bodyRot: [0, -Math.PI / 2, 0] },
   ];
   if (TIERS[t].luxe) s.push({ key: 'tub', icon: '♨️', label: 'Hot tub', actions: ['relax'], label3d: [-1.5, 2, 2.8], stand: [-1.5, 1], standYaw: Math.PI,

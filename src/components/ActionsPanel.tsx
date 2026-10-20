@@ -5,7 +5,7 @@ import { money } from '../lib/format';
 import type { NeedKey } from '../game/types';
 
 const GROUPS = ACTION_GROUPS;
-export const HOME_ACTIONS = new Set(['sleep', 'nap', 'cook', 'shower', 'relax', 'call']);
+export const HOME_ACTIONS = new Set(['sleep', 'nap', 'cook', 'shower', 'relax', 'call', 'content']);
 const SHORT: Record<NeedKey, string> = { energy: 'Energy', hunger: 'Fullness', social: 'Social', hygiene: 'Hygiene' };
 
 export default function ActionsPanel({ groups, onShowAll }: { groups?: ActionGroup[]; onShowAll?: () => void }) {

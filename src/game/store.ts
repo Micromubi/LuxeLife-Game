@@ -38,6 +38,10 @@ interface Store {
   act: (id: string) => void;
   buy: (id: string, financed?: boolean) => void;
   invest: (fund: FundId, amount: number) => void;
+  buyStock: (id: string, shares: number) => void;
+  sellStock: (id: string, shares: number) => void;
+  buyDeal: (id: string) => void;
+  restore: (uid: string) => void;
   withdraw: (fund: FundId, amount: number) => void;
   sell: (uid: string, mode: 'normal' | 'fire') => void;
   borrow: (amount: number, label?: string) => void;
@@ -124,6 +128,10 @@ export const useGame = create<Store>()(
           }
         },
         invest: (fund, amount) => run((g, out) => E.invest(g, fund, amount, out)),
+        buyStock: (id, shares) => run((g, out) => E.buyStock(g, id, shares, out)),
+        sellStock: (id, shares) => run((g, out) => E.sellStock(g, id, shares, out)),
+        buyDeal: (id) => run((g, out) => E.buyDeal(g, id, out), { purchase: true }),
+        restore: (uid) => run((g, out) => E.restoreAsset(g, uid, out)),
         withdraw: (fund, amount) => run((g, out) => E.withdraw(g, fund, amount, out)),
         buy: (id, financed) => {
           const before = get().game;
@@ -158,6 +166,11 @@ export const useGame = create<Store>()(
         try { return localStorage; } catch { return sessionStorage; }
       }),
       partialize: (st) => ({ game: st.game, settings: st.settings }),
+      // Older saves get any newly added fields (markets, deals, followers) filled in on load.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<Store>;
+        return { ...current, ...p, game: p.game ? E.hydrate(p.game) : null, settings: { ...current.settings, ...(p.settings ?? {}) } };
+      },
     },
   ),
 );

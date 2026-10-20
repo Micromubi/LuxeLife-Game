@@ -1,7 +1,7 @@
 import type { ActionGroup } from '../game/config';
 import type { GameState } from '../game/types';
 
-export type Tab = 'Actions' | 'Boutique' | 'Portfolio' | 'Finance' | 'Ledger';
+export type Tab = 'Actions' | 'Boutique' | 'Markets' | 'Portfolio' | 'Finance' | 'Ledger';
 export type LocId =
   | 'home' | 'office' | 'restaurant' | 'spa' | 'club' | 'boutique' | 'bank' | 'ventures' | 'plaza' | 'island'
   | 'gym' | 'clinic' | 'casino' | 'arena' | 'school' | 'beachclub' | 'airport' | 'motors' | 'realty' | 'jeweller';
@@ -38,10 +38,10 @@ export const RUNWAY_Z = -66;
 const at = (x: number, z: number): { pos: [number, number]; door: [number, number] } => ({ pos: [x, z], door: [x, z + BLOCK / 2] });
 
 export const LOCS: Record<LocId, Loc> = {
-  bank: { id: 'bank', label: 'Private Bank', icon: '🏦', ...at(-22, -22), tab: 'Finance', hint: 'Loans & credit' },
+  bank: { id: 'bank', label: 'Private Bank', icon: '🏦', ...at(-22, -22), tab: 'Markets', hint: 'Stock exchange, loans & credit' },
   office: { id: 'office', label: 'Sterling & Vane Tower', icon: '💼', ...at(0, -22), tab: 'Actions', groups: ['Work'], hint: 'Work shifts' },
   restaurant: { id: 'restaurant', label: 'Maison Dorée', icon: '🍽️', ...at(22, -22), tab: 'Actions', groups: ['Dine'], hint: 'Dine' },
-  home: { id: 'home', label: 'Home', icon: '🏠', ...at(-22, 0), tab: 'Actions', groups: ['Rest', 'Care'], hint: 'Sleep, rest & freshen up' },
+  home: { id: 'home', label: 'Home', icon: '🏠', ...at(-22, 0), tab: 'Actions', groups: ['Rest', 'Care', 'Hustle'], hint: 'Sleep, rest, freshen up & side hustles' },
   plaza: { id: 'plaza', label: 'Gilded Plaza', icon: '⛲', ...at(0, 0), tab: 'Ledger', hint: 'Your ledger' },
   spa: { id: 'spa', label: 'Aurum Spa', icon: '💆', ...at(22, 0), tab: 'Actions', groups: ['Care'], hint: 'Grooming & spa' },
   boutique: { id: 'boutique', label: 'The Boutique', icon: '👜', ...at(-22, 22), tab: 'Boutique', hint: 'Buy luxury' },
@@ -51,8 +51,8 @@ export const LOCS: Record<LocId, Loc> = {
 
   // West end
   school: { id: 'school', label: 'Whitmore Business School', icon: '🎓', ...at(-44, -22), tab: 'Actions', groups: ['Study'], hint: 'Classes count toward promotion' },
-  realty: { id: 'realty', label: 'Skyline Realty', icon: '🏘️', ...at(-44, 0), tab: 'Boutique', shopCat: 'RESIDENCE', hint: 'Homes & rentals' },
-  motors: { id: 'motors', label: 'Prestige Motors', icon: '🏎️', ...at(-44, 22), tab: 'Boutique', shopCat: 'VEHICLE', hint: 'Cars & jets' },
+  realty: { id: 'realty', label: 'Skyline Realty', icon: '🏘️', ...at(-44, 0), tab: 'Markets', hint: 'Deals, flips & homes' },
+  motors: { id: 'motors', label: 'Prestige Motors', icon: '🏎️', ...at(-44, 22), tab: 'Markets', hint: 'Used-car deals & flips' },
   // North row
   jeweller: { id: 'jeweller', label: 'Aurelia Jewellers', icon: '💎', ...at(-22, -44), tab: 'Boutique', shopCat: 'ACCESSORY', hint: 'Watches & jewels' },
   airport: { id: 'airport', label: 'Sky Harbour Terminal', icon: '✈️', ...at(44, -44), tab: 'Actions', groups: ['Travel'], hint: 'Trips & getaways' },
@@ -112,6 +112,7 @@ export const ACTION_LOC: Record<string, LocId> = {
   match: 'arena', concert: 'arena', vipbox: 'arena',
   slots: 'casino', blackjack: 'casino', highroller: 'casino',
   getaway: 'airport', monaco: 'airport',
+  delivery: 'restaurant', rideshare: 'airport', freelance: 'office', content: 'home', lottery: 'casino',
 };
 
 export function homeLoc(g: GameState): LocId {

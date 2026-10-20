@@ -1,11 +1,92 @@
-# Luxe Life — MVP
+# Luxe Life
 
-A browser-based luxury life sim. **Work → Earn → Spend → Survive.**
+A luxury life sim that runs in your browser. Start with almost nothing, or with a trust fund, and build a fortune in a 3D city: work, hustle, invest, flip cars and property, run businesses and gamble. Look after yourself along the way, because bills, lawsuits and bad luck are always close.
 
-## Play right now
-Double-click **`LuxeLife.html`**. It's the whole game in one file and saves automatically in your browser.
+## Play
 
-## Develop
+1. Download **[`LuxeLife.html`](LuxeLife.html)**. Open it on GitHub, then use **Download raw file**.
+2. Double-click it.
+
+The whole game is in that one file. It works offline and saves automatically in your browser. Fonts load from Google when you're online; offline it uses standard fonts.
+
+### Controls
+
+- **Click a building** (or a venue on the city map) to go there and open its menu.
+- **Drag** to look around and **scroll** to zoom. The camera stops as soon as you let go.
+- **Needs attention** (above the bottom menu) suggests the best thing to do right now for whatever you're lacking. One click does it.
+- **Home → 🚪 Go inside** walks you into your home. Click the bed, kitchen, shower, sofa, desk or hot tub to act it out.
+- **☰ menu:** sound, graphics (Low / High / Ultra), export and import your save, and new game.
+
+## How the game works
+
+### Your character
+- **Two starts.** *Old Money* begins with $50,000, a junior job and good credit. *New Blood* begins with $500 and a $2,000 loan, but earns 25% more per shift.
+- **A 24-hour body clock.** Energy lasts about 16 waking hours and comes back with sleep (best at night, and better in nicer homes). You get hungry about every 5 hours, want a shower once a day, and get lonely after a day or two alone.
+- **Mood** comes from your needs and health, and sets your pay: 0.75× when miserable, up to 1.15× when thriving.
+- **Neglect costs money.** Starving or burning out damages your health. Poor hygiene leads to infections. Both end in clinic and hospital bills.
+- **Your look** follows what you buy: street clothes, then suits, then haute couture, plus a gold watch. Once you own a car, you drive it around the city.
+
+### Ways to make money
+| | |
+|---|---|
+| **Career** | 2-hour shifts at Sterling & Vane Tower, from Intern ($25/h) to Chairman ($6,000/h). Promotions need shifts, prestige and the right wardrobe. Double shifts pay 2.2× but are hard on your body. Classes at the business school count toward promotion. |
+| **Side jobs** | No career needed: food delivery, rideshare (needs a car; nicer cars earn better fares), freelance gigs, and creating content. Content pay grows with your followers, and posts sometimes go viral. |
+| **Businesses** | Eight ventures from a $1,200 food cart to a $40M holding company. They earn every hour they're open. Earnings rise with staff morale (use Manage Ventures), your prestige and the day's market mood. |
+| **Property** | Every home you own except the one you live in is rented out and pays daily rent. |
+| **Stock market** | Eight companies (bank → **Markets**) whose prices move every hour, with sudden news jumps. There's a chart for each, buy and sell in any amount, and a 0.1% trading fee. |
+| **Flipping** | The deals board (Skyline Realty or Prestige Motors) lists cars and property below market every morning. Fixer-uppers are cheapest, but you have to restore them to unlock their full value. Buy low, restore, sell. |
+| **Funds** | An index fund (steady) and crypto (wild swings) in the Finance tab. |
+| **Gambling** | Lottery tickets ($20, $2.5M jackpot at 1 in 250,000), slots, blackjack, the high-roller room and billionaires' poker. |
+| **Luck** | Consumer booms, viral reviews, friends repaying debts, and the occasional inheritance. |
+
+### Ways to go broke
+- **Running costs:** upkeep on cars, homes and memberships, staff wages, studio rent and business costs, charged every day.
+- **Taxes:** 10% on wages, and 20% on business profit every week.
+- **Debt:** loan interest adds up daily, with a payment due every week. Miss three and the bank repossesses the asset.
+- **Markets and gambling:** stock crashes, crypto swings, market slumps and losing streaks.
+- **Big events:**
+  - tax audits once you're worth over $1M
+  - lawsuits once you're worth over $200k
+  - robberies when you carry a lot of cash (a Social Concierge limits the damage)
+  - tabloid scandals that hit your reputation and rattle your staff
+- **Staff theft:** employees at businesses with low morale skim the till.
+- **Bad luck:** pickpockets, car repairs, and cars and clothes losing value.
+- **Hitting bottom:** if your cash stays below zero, you must fire-sell at 50%, take an emergency loan or declare bankruptcy. If your net worth stays negative for 3 days, everything is sold at 20% and lenders won't touch you for 14 days.
+
+### Status
+**Prestige** comes from what you own plus your reputation (which slowly fades). It unlocks careers, venues and luxury items. At 700 prestige you become **VIP** and the screen turns gold. Networking tokens from VIP tables, galas, yacht parties, the VIP box and the Monaco Grand Prix unlock the biggest businesses.
+
+## The city
+
+The city is a 3D island with a full day and night cycle tied to the game clock. Sunsets, lit windows, street lamps and club searchlights follow the time of day. Traffic drives the streets, people walk the pavements, and a skyline and hills sit across the bay. Every venue stands on its own landscaped lawn, with parks in between.
+
+| Venue | What's there |
+|---|---|
+| 🏠 Home | Sleep, cook, shower, relax, call friends, create content, or go inside |
+| 💼 Sterling & Vane Tower | Work shifts, freelance gigs |
+| 🏦 Private Bank | Stock exchange, loans and credit |
+| 🍽️ Maison Dorée | Street food to Michelin dining; delivery runs |
+| 💆 Aurum Spa | Barber and spa days |
+| 🍸 Club Noir | Drinks, VIP tables, galas, poker |
+| 👜 The Boutique | Everything for sale |
+| ⛲ Gilded Plaza | Your ledger |
+| 🎓 Whitmore Business School | Classes that count toward promotion |
+| 🏘️ Skyline Realty / 🏎️ Prestige Motors | Deals board for flips |
+| 💎 Aurelia Jewellers | Watches and jewels |
+| 🏋️ Iron & Oak Gym | Workouts that build health |
+| 🏥 St. Regis Clinic | Check-ups and treatment |
+| 🎰 Golden Palace Casino | Lottery, slots, blackjack, high-roller room |
+| 🏟️ Crown Arena | Matches, concerts, VIP box |
+| 🏖️ Azure Beach Club | Beach days, cabanas, yacht parties |
+| ✈️ Sky Harbour Terminal | Getaways and the Monaco Grand Prix (60% cheaper with your own jet) |
+| 🏗️ Ventures Row | Buy and run businesses |
+
+**What you buy shows up in the world.** Your home upgrades from a rented studio to a flat, apartment, penthouse or villa. Cars park in your driveway, the jet waits on the runway, and a private island rises out of the sea with a causeway. Inside, your home matches what you own, from a brick studio to a marble penthouse with a hot tub. A private chef appears in your kitchen once you hire one.
+
+## For developers
+
+Built with React, TypeScript, Vite, Tailwind, Zustand, and three.js through React Three Fiber.
+
 ```bash
 npm install
 npm run dev          # http://localhost:5173
@@ -13,55 +94,21 @@ npm run build        # production build → dist/
 npm run build:play   # rebuild the single-file LuxeLife.html
 ```
 
-## The 3D city
-The game plays out in a low-poly 3D city (three.js via React Three Fiber):
-- **Click a building to go there**: Sterling & Vane Tower (work), Maison Dorée (dine), Home (sleep/rest), Aurum Spa (grooming), Club Noir (society), The Boutique (shop), Private Bank (loans), Gilded Plaza (ledger), Ventures Row (businesses).
-- Your character walks the streets to wherever you act, and walks faster once you own a car. Their outfit changes as you buy clothes (street → suit → tailored → couture), and a watch appears on their wrist.
-- Home changes from rented studio → apartment → penthouse → villa; cars park in your driveway; a private jet gets an airstrip; the private island rises out of the sea with a causeway.
-- Businesses appear on Ventures Row (empty "For sale" lots until you buy them).
-- Real day/night cycle tied to the game clock: windows light up, street lamps glow, club searchlights sweep the sky.
-- Drag to orbit, scroll to zoom.
-- The Luxe look: gold-and-serif overlays, champagne road lines, black-and-gold Luxe cabs, a physical sky with real sunsets, reflective sea, glossy wet roads at night, street-lamp light pools, a skyline and hills across the bay, beach and marina, traffic with headlights, and people on the pavements.
-- A spacious city: every venue sits on its own landscaped lawn, with parks and fountains between blocks, and 18 places to go, including Whitmore Business School (classes count toward promotion), Iron & Oak Gym (builds health), St. Regis Clinic, Golden Palace Casino (slots, blackjack, high-roller room), Crown Arena (matches, concerts, VIP box), Azure Beach Club (cabanas, yacht parties), Sky Harbour Terminal (getaways and the Monaco Grand Prix, 60% cheaper with your own jet), and dedicated shops: Prestige Motors, Skyline Realty and Aurelia Jewellers.
-- Quick actions: a "Needs attention" bar suggests the best thing you can do right now for whatever you lack most (energy, fullness, hygiene, social, health) — one click to do it.
-- Go inside your home: click Home → Go inside. The room matches what you own (rented studio up to penthouse, villa or island), and you click the bed, kitchen, shower, sofa & TV, desk phone or hot tub to act it out while the clock runs forward. A private chef cooks in your kitchen once hired.
-- Own a car and you drive it (instead of walking); the camera chases you while you travel.
-- On screen: a gold cash card with +/− notes, a north-up city map (click a venue to go there, ◎ Me to find yourself) with health and need bars, and the venue name in serif when you arrive.
-- ☰ → Graphics: Low (older PCs), High (default), Ultra (real-time sea reflections).
+### Code map
+| Path | What it holds |
+|---|---|
+| `src/game/config.ts` | Game balance: catalog, careers, actions, stocks, lottery odds, decay rates |
+| `src/game/engine.ts` | Pure game logic: the hourly tick, midnight bills and events, actions, buying and selling, loans, stocks, deals |
+| `src/game/store.ts` | Zustand store and saving (older saves are upgraded automatically on load) |
+| `src/world/layout.ts` | City grid, venue positions, walking routes |
+| `src/world/World.tsx` | The 3D scene: sky, lighting, camera, buildings |
+| `src/world/Venues.tsx`, `Buildings.tsx`, `Props.tsx` | Building models, roads, traffic, pedestrians, skyline |
+| `src/world/Interior.tsx` | The walk-in home |
+| `src/components/` | Screens and panels: money card, city map, quick actions, Markets, Shop, Finance… |
 
-## Realistic wellbeing
-- A 24-hour body clock: energy lasts ~16–18 waking hours (faster at work and after midnight), you get hungry about every 5 hours, want a shower once a day, and get lonely after a day or two alone. Sleep, not coffee, restores energy — best at night (21:00–09:00), and better homes sleep better.
-- Venues keep real hours (office shifts start 07:00–18:00, clubs 21:00–03:00, galas in the evening…). You can't eat when you're full or sleep when you're not tired.
-- **Mood** (from all your needs and health) sets your pay multiplier: 0.75× when miserable, up to 1.15× when thriving.
-- Health drops when you starve or burn out; poor hygiene risks infections and clinic bills.
+### Optional: Supabase cloud save
+1. Create a Supabase project, run `supabase/schema.sql`, and turn on **Anonymous sign-ins**.
+2. Copy `.env.example` to `.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+3. Run `npm run dev`. Cloud save and load appear in the ☰ menu.
 
-## Getting rich faster (realistically)
-- Higher wages and faster promotions (Intern $25/h → Chairman $6,000/h).
-- **Side hustles** from $1,200 (food cart, online reseller, car wash) that pay back in 1–2 game weeks. Businesses only earn during their opening hours.
-- **Finance**: mortgages (20% down), car finance (15%) and business loans (30%) with weekly instalments; miss three and the asset is repossessed.
-- **Landlord income**: every property except your home is let out for daily rent.
-- **Investments**: an index fund and crypto that move every midnight.
-
-## What's in the MVP
-- **Character creation** — Old Money / Nepo ($50,000, Junior Analyst, 720 credit) or New Blood / Lapo ($500 + $2,000 loan at 1.5%/day, "Hungry" +25% pay).
-- **Real-time clock** — one tick = one in-game hour (Leisurely 60s, Standard 15s, Hustle 5s; pausable). Needs decay every tick (energy −2, hunger −1, hygiene −1, social −0.5), businesses earn, and bills arrive at midnight.
-- **Actions take time** — work shifts (2h), double shifts (2h, 2.2× pay), dining, sleep, grooming, social events. Low energy halves productivity; low hygiene hurts pay and reputation; starving damages health and leads to hospital bills.
-- **Boutique** — 32 items across indulgences, wardrobe, garage, real estate, jewels & watches, staff, and ventures. Every asset carries prestige, upkeep, resale value and/or need mitigation (sedan cuts commute fatigue, chef halves hunger decay, penthouse spa halves hygiene decay…).
-- **Career ladder** — Intern → Chairman, gated by shifts, prestige and wardrobe (a Business Suit to make Associate).
-- **Prestige meter** — assets + decaying reputation; tiers Nobody → Dynasty. At 700 the dashboard switches to the gold **VIP** theme.
-- **Businesses** — revenue scales with staff morale, your prestige, volatility and daily market mood; payroll daily, 20% profit tax weekly. Bigger ventures need networking tokens earned at VIP tables and galas.
-- **Debt & ruin** — compounding loans with weekly instalments; three misses → repossession. Cash below zero for 2 ticks → **"You're broke"** modal (fire-sell at 50%, emergency loan, or declare bankruptcy). Net worth negative 3 days → **Liquidation** (assets sold at 20%, credit 300, locked out 14 days).
-- **Feedback** — gold shimmer and chime on purchases, register click on pay, pulsing red border when a need is critical.
-- **Saves** — localStorage autosave, export/import JSON, and optional Supabase cloud save.
-
-## Optional: Supabase cloud save
-1. Create a Supabase project, run `supabase/schema.sql`, and enable **Anonymous sign-ins**.
-2. Copy `.env.example` → `.env` and fill in `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`.
-3. `npm run dev` — Cloud save/load appears in the ☰ menu.
-
-## Code map
-- `src/game/config.ts` — all tuning: catalog, careers, actions, decay rates, thresholds.
-- `src/game/engine.ts` — pure game logic (`simulateHour`, `doAction`, `buy`, `sell`, `borrow`, `liquidate`…).
-- `src/game/store.ts` — Zustand store + persistence.
-- `src/hooks/useGameLoop.ts` — the real-time tick.
-- `src/components/` — UI.
+Cloud save trusts the browser, so it doesn't stop cheating. It's meant for keeping your own progress, not for leaderboards.

@@ -9,6 +9,7 @@ import StatusColumn from './StatusColumn';
 import ActionsPanel from './ActionsPanel';
 import Shop from './Shop';
 import Portfolio from './Portfolio';
+import Markets from './Markets';
 import Finance from './Finance';
 import Ledger from './Ledger';
 import { BrokeModal, LiquidationModal } from './Modals';
@@ -16,7 +17,7 @@ import Toasts from './Toasts';
 import SettingsMenu from './SettingsMenu';
 
 const World = lazy(() => import('../world/World'));
-const TABS: Tab[] = ['Actions', 'Boutique', 'Portfolio', 'Finance', 'Ledger'];
+const TABS: Tab[] = ['Actions', 'Boutique', 'Markets', 'Portfolio', 'Finance', 'Ledger'];
 
 export default function Dashboard() {
   const game = useGame((s) => s.game)!;
@@ -134,6 +135,7 @@ export default function Dashboard() {
         <div className="flex-1 overflow-y-auto px-4 pb-6">
           {drawer.tab === 'Actions' && <ActionsPanel groups={drawer.groups} onShowAll={() => openTab('Actions')} />}
           {drawer.tab === 'Boutique' && <Shop key={drawer.shopCat ?? 'all'} initialCat={drawer.shopCat} />}
+          {drawer.tab === 'Markets' && <Markets />}
           {drawer.tab === 'Portfolio' && <Portfolio />}
           {drawer.tab === 'Finance' && <Finance />}
           {drawer.tab === 'Ledger' && <Ledger />}
