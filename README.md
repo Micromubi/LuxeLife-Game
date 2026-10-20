@@ -45,7 +45,7 @@ The game plays out in a low-poly 3D city (three.js via React Three Fiber):
 ## What's in the MVP
 - **Character creation** — Old Money / Nepo ($50,000, Junior Analyst, 720 credit) or New Blood / Lapo ($500 + $2,000 loan at 1.5%/day, "Hungry" +25% pay).
 - **Real-time clock** — one tick = one in-game hour (Leisurely 60s, Standard 15s, Hustle 5s; pausable). Needs decay every tick (energy −2, hunger −1, hygiene −1, social −0.5), businesses earn, and bills arrive at midnight.
-- **Actions take time** — work shifts (4h), double shifts, dining, sleep, grooming, social events. Low energy halves productivity; low hygiene hurts pay and reputation; starving damages health and leads to hospital bills.
+- **Actions take time** — work shifts (2h), double shifts (2h, 2.2× pay), dining, sleep, grooming, social events. Low energy halves productivity; low hygiene hurts pay and reputation; starving damages health and leads to hospital bills.
 - **Boutique** — 32 items across indulgences, wardrobe, garage, real estate, jewels & watches, staff, and ventures. Every asset carries prestige, upkeep, resale value and/or need mitigation (sedan cuts commute fatigue, chef halves hunger decay, penthouse spa halves hygiene decay…).
 - **Career ladder** — Intern → Chairman, gated by shifts, prestige and wardrobe (a Business Suit to make Associate).
 - **Prestige meter** — assets + decaying reputation; tiers Nobody → Dynasty. At 700 the dashboard switches to the gold **VIP** theme.

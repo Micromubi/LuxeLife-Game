@@ -165,9 +165,9 @@ export interface ActionDef {
 }
 
 export const ACTIONS: ActionDef[] = [
-  { id: 'work', label: 'Work a Shift', group: 'Work', hours: 4, cost: 0, effects: {}, special: 'work', minEnergy: 15, open: [7, 18], desc: '4h. Colleagues keep you social; the commute and desk drain you.' },
-  { id: 'overtime', label: 'Double Shift', group: 'Work', hours: 8, cost: 0, effects: {}, special: 'overtime', minEnergy: 50, open: [7, 13], desc: '8h. 2.2× pay. Brutal on the body.' },
-  { id: 'manage', label: 'Manage Ventures', group: 'Work', hours: 3, cost: 0, effects: {}, special: 'manage', minEnergy: 15, open: [8, 20], desc: '3h. Staff morale +30 across all businesses.' },
+  { id: 'work', label: 'Work a Shift', group: 'Work', hours: 2, cost: 0, effects: {}, special: 'work', minEnergy: 15, open: [7, 20], desc: '2h. Colleagues keep you social; the commute and desk drain you.' },
+  { id: 'overtime', label: 'Double Shift', group: 'Work', hours: 2, cost: 0, effects: { energy: -18, hygiene: -12 }, special: 'overtime', minEnergy: 50, open: [7, 18], desc: '2h flat out. 2.2× pay, counts as 2 shifts. Brutal on the body.' },
+  { id: 'manage', label: 'Manage Ventures', group: 'Work', hours: 2, cost: 0, effects: {}, special: 'manage', minEnergy: 15, open: [8, 20], desc: '2h. Staff morale +30 across all businesses.' },
 
   { id: 'cook', label: 'Cook at Home', group: 'Dine', hours: 1, cost: 12, effects: { hunger: 45 }, maxNeed: { hunger: 85 }, desc: '1h. Groceries. Cheapest proper meal.' },
   { id: 'suya', label: 'Street Food', group: 'Dine', hours: 1, cost: 8, effects: { hunger: 35 }, maxNeed: { hunger: 85 }, open: [6, 23], desc: '1h. Quick and filling.' },

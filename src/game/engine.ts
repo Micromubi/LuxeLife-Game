@@ -492,6 +492,7 @@ export function doAction(s: GameState, id: string, out: Out): Result {
     const commute = 4 * (1 - mods.commute);
     applyNeeds(s, { energy: -commute });
     for (let i = 0; i < a.hours; i++) simulateHour(s, out, { working: true });
+    applyNeeds(s, a.effects);
     s.cash += gross - tax;
     s.stats.lifetimeEarnings += gross;
     ledger(s, gross, 'INCOME', `${careerInfo(s).cur.title} wages${prod.reasons.length ? ` (${prod.reasons.join(', ')})` : ''}`);
